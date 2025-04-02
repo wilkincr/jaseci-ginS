@@ -14,18 +14,6 @@ from pydantic import BaseModel
 
 # Helper class to maintain a fixed deque size
 
-class InstrumentType(str, enum.Enum):
-    STRING = "string"
-    WOODWIND = "woodwind"
-    BRASS = "brass"
-    PERCUSSION = "percussion"
-    KEYBOARD = "keyboard"
-
-class Instrument(BaseModel):
-    description: str
-    instrument_type: InstrumentType
-
-
 class ShellGhost:
     def __init__(self):
         self.cfgs = None
@@ -304,9 +292,6 @@ class ShellGhost:
                 prompt += f"\nModule {module}: Offset: {var_map[0]}, Variables: {str(var_map[1])}"
 
         prompt +=   """\n given this information, what is the program behavior?
-        
-                    Use this JSON schema:
-                    Behavior = {'behavior': str, 'possible_errors': list[str]}
                     """
                     
         print("PROMPT: ", prompt)
@@ -333,6 +318,7 @@ class ShellGhost:
                 return
 
             for module, offset_list in exec_insts.items():
+                # print(offset_list)
                 try:
                     cfg = self.cfgs[module]
 
@@ -342,7 +328,11 @@ class ShellGhost:
                         current_executing_bbs[module] = 0
                         cfg.block_map.idx_to_block[0].exec_count = 1
 
-                    for offset in offset_list:
+                    # print("HHHH")
+
+                    for offset_tuple in offset_list:
+                        offset = offset_tuple[0]
+                        # print(offset)
                         if (
                             offset
                             not in cfg.block_map.idx_to_block[

@@ -16,6 +16,7 @@ class BytecodeOp:
         argval: int,
         argrepr: str,
         is_jump_target: bool,
+        lineno: Optional[int] = None
     ) -> None:
         self.op = op
         self.arg = arg
@@ -23,11 +24,12 @@ class BytecodeOp:
         self.argval = argval
         self.argrepr = argrepr
         self.is_jump_target = is_jump_target
+        self.lineno = lineno
         # default the offset
         self.__offset_size = 0
 
     def __repr__(self):
-        return f"Instr: offset={self.offset}, Opname={self.op}, arg={self.arg}, argval={self.argval}, argrepr={self.argrepr}, jump_t={self.is_jump_target}"
+        return f"Instr: offset={self.offset}, Lineno={self.lineno}, Opname={self.op}, arg={self.arg}, argval={self.argval}, argrepr={self.argrepr}, jump_t={self.is_jump_target}"
 
     def is_branch(self) -> bool:
         return self.op in {
@@ -107,6 +109,9 @@ def disassemble_bytecode(bytecode):
     code_object = marshal.loads(bytecode)
     instructions = []
     for i, instr in enumerate(dis.get_instructions(code_object)):
+        line = getattr(instr, "lineno", None)
+        if line is None:
+            line = instr.starts_line
         instructions.append(
             BytecodeOp(
                 op=instr.opname,
@@ -115,6 +120,7 @@ def disassemble_bytecode(bytecode):
                 argval=instr.argval,
                 argrepr=instr.argrepr,
                 is_jump_target=instr.is_jump_target,
+                lineno=line
             )
         )
         # set offest size for calculating next instruction

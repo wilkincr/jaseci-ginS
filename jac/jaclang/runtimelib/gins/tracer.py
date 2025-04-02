@@ -8,6 +8,7 @@ import sys
 import copy
 import os
 import traceback
+import linecache
 import dis
 from collections import deque
 import inspect
@@ -86,6 +87,18 @@ class CFGTracker:
         return cpy
     
 
+    def get_line_from_frame(frame):
+        lineno = frame.f_code.co_firstlineno
+        byte_offset = frame.f_lasti
+        line_starts = list(dis.findlinestarts(frame.f_code))
+        current_line = lineno
+        for offset, line in line_starts:
+            if byte_offset < offset:
+                break
+            current_line = line
+        return current_line
+    
+
     def trace_callback(
         self, frame: types.FrameType, event: str, arg: any
     ) -> Optional[Callable]:
@@ -108,7 +121,10 @@ class CFGTracker:
             self.inst_lock.acquire()
             if module not in self.executed_insts:
                 self.executed_insts[module] = []
-            self.executed_insts[module].append(frame.f_lasti)
+            line_no = CFGTracker.get_line_from_frame(frame)
+            # source_line = linecache.getline(frame.f_code.co_filename, line_no).strip()
+            # print(f"Opcode at offset {frame.f_lasti} corresponds to line {line_no}: {source_line}")
+            self.executed_insts[module].append((frame.f_lasti, line_no))
             self.inst_lock.release()
             variable_dict = {}
             if "__annotations__" in frame.f_locals:

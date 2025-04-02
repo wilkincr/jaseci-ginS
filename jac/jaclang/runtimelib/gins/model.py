@@ -17,6 +17,7 @@ class Cfg(TypedDict):
     cfg_bbs: List[BasicBlock]
 
 
+
 class Error(enum.Enum):
     OK = "Ok"
     ZeroDivisionError = "ZeroDivisionError"
@@ -26,10 +27,14 @@ class Error(enum.Enum):
     IndexError = "IndexError"
     SyntaxError = "SyntaxError"
 
+class ErrorResponse(TypedDict):
+    type_of_error: Error
+    error_line_number: str
+
 
 class Response(TypedDict):
-    description : str
-    error: List[Error]
+    behavior_description : str
+    error_list: List[ErrorResponse]
 """Generative AI model integration for GINS
 """
 class BaseModel:
