@@ -2,15 +2,28 @@
 """
 
 import os
+import enum
 import threading
 import time
 import logging
 
 from jaclang.runtimelib.gins.model import Gemini
 from jaclang.runtimelib.gins.tracer import CFGTracker, CfgDeque
+from pydantic import BaseModel
 
 
 # Helper class to maintain a fixed deque size
+
+class InstrumentType(str, enum.Enum):
+    STRING = "string"
+    WOODWIND = "woodwind"
+    BRASS = "brass"
+    PERCUSSION = "percussion"
+    KEYBOARD = "keyboard"
+
+class Instrument(BaseModel):
+    description: str
+    instrument_type: InstrumentType
 
 
 class ShellGhost:
@@ -290,8 +303,14 @@ class ShellGhost:
             for module, var_map in self.variable_values.items():
                 prompt += f"\nModule {module}: Offset: {var_map[0]}, Variables: {str(var_map[1])}"
 
-        prompt+="\n given this information, what is the program behavior? Please express this in short bullets"
-        response = self.model.generate(prompt)
+        prompt +=   """\n given this information, what is the program behavior?
+        
+                    Use this JSON schema:
+                    Behavior = {'behavior': str, 'possible_errors': list[str]}
+                    """
+                    
+        print("PROMPT: ", prompt)
+        response = self.model.generate_structured(prompt)
         return response
     def worker(self):
         # get static cfgs
@@ -376,7 +395,7 @@ class ShellGhost:
 
         print("\nUpdating cfgs at the end")
         update_cfg()
-        print(self.prompt_for_runtime())
+        print("HELLO" + self.prompt_for_runtime())
         # print(self.__cfg_deque_dict['hot_path'].get_cfg_repr())
         # self.logger.info(self.prompt_llm())
         

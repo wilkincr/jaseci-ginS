@@ -1,4 +1,5 @@
 from typing import List, TypedDict
+import enum
 
 #for identifying hot edge prediction
 class Edge(TypedDict):
@@ -14,6 +15,21 @@ class BasicBlock(TypedDict):
 
 class Cfg(TypedDict):
     cfg_bbs: List[BasicBlock]
+
+
+class Error(enum.Enum):
+    OK = "Ok"
+    ZeroDivisionError = "ZeroDivisionError"
+    NameError = "NameError"
+    TypeError = "TypeError"
+    ValueError = "ValueError"
+    IndexError = "IndexError"
+    SyntaxError = "SyntaxError"
+
+
+class Response(TypedDict):
+    description : str
+    error: List[Error]
 """Generative AI model integration for GINS
 """
 class BaseModel:
@@ -51,7 +67,7 @@ class Gemini(BaseModel):
             return None
 
     def generate(self, prompt: str):
-        response = self.model.generate_content(prompt)
+        response = self.model.generate_content(prompt, )
         return response.text
         
     def generate_structured(self, prompt: str):
@@ -60,5 +76,5 @@ class Gemini(BaseModel):
           prompt,
           generation_config=genai.GenerationConfig(
           response_mime_type='application/json',
-          response_schema=Cfg),)
+          response_schema=Response),)
         return response.text
