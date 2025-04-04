@@ -172,8 +172,9 @@ class ShellGhost:
         {cfgs},
         Instructions per basic block:
         {instructions}
-        Semantic and Type information from source code:
-        {sem_ir}"""
+        """
+        # Semantic and Type information from source code:
+        # {sem_ir}"""
 
         cfg_string = ""
         ins_string = ""
@@ -291,7 +292,8 @@ class ShellGhost:
             for module, var_map in self.variable_values.items():
                 prompt += f"\nModule {module}: Offset: {var_map[0]}, Variables: {str(var_map[1])}"
 
-        prompt +=   """\n given this information, what is the program behavior?
+        prompt +=   """\n given this information, what is the program behavior? What type of runtime error can occurs?
+                    If there are any possible runtime errors, what line number is the instruction that causes the error?
                     """
                     
         print("PROMPT: ", prompt)
@@ -328,7 +330,6 @@ class ShellGhost:
                         current_executing_bbs[module] = 0
                         cfg.block_map.idx_to_block[0].exec_count = 1
 
-                    # print("HHHH")
 
                     for offset_tuple in offset_list:
                         offset = offset_tuple[0]
@@ -362,9 +363,10 @@ class ShellGhost:
                 except Exception as e:
                     self.set_finished(e)
                     print(e)
-                    return
+                    break
 
             self.variable_values = self.tracker.get_variable_values()
+            print("Updating cfg deque")
             self.update_cfg_deque(cfg.get_cfg_repr(), module)
             self.logger.info(cfg.to_json())
             print(f"CURRENT INPUTS: {self.tracker.get_inputs()}")
@@ -385,7 +387,10 @@ class ShellGhost:
 
         print("\nUpdating cfgs at the end")
         update_cfg()
-        print("HELLO" + self.prompt_for_runtime())
+        response = self.prompt_for_runtime()
+        print(response["behavior_description"])
+        print(response["error_list"])
+        
         # print(self.__cfg_deque_dict['hot_path'].get_cfg_repr())
         # self.logger.info(self.prompt_llm())
         

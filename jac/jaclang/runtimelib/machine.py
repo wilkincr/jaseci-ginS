@@ -87,6 +87,7 @@ class JacMachine:
 
     def get_sem_ir(self, mod_sem_ir: SemRegistry | None) -> None:
         """Update semtable on the attached JacProgram."""
+        print("Sem IR: ", mod_sem_ir.pp())
         if self.jac_program and mod_sem_ir:
             if self.jac_program.sem_ir:
                 self.jac_program.sem_ir.registry.update(mod_sem_ir.registry)

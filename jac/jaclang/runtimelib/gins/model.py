@@ -1,5 +1,6 @@
 from typing import List, TypedDict
 import enum
+import json
 
 #for identifying hot edge prediction
 class Edge(TypedDict):
@@ -38,7 +39,7 @@ class Response(TypedDict):
 """Generative AI model integration for GINS
 """
 class BaseModel:
-    def __init__(self, model_name: str = "gemini-1.5-flash", **kwargs):
+    def __init__(self, model_name: str = "gemini-1.5-pro", **kwargs):
         self.model_name = model_name
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -82,4 +83,5 @@ class Gemini(BaseModel):
           generation_config=genai.GenerationConfig(
           response_mime_type='application/json',
           response_schema=Response),)
-        return response.text
+        response_dict = json.loads(response.text)
+        return response_dict
