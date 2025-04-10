@@ -1,6 +1,3 @@
-"""Module to track executed branches and variables
-"""
-
 import types
 from typing import Optional, Callable
 import threading
@@ -14,6 +11,8 @@ from collections import deque
 import inspect
 import warnings
 import ast
+
+import tracemalloc  # <-- ADDED
 
 
 class CfgDeque:
@@ -33,12 +32,11 @@ class CfgDeque:
         return len(self.__deque)
 
     def get_cfg_repr(self):
-      res = [f"CFG Changes in last {len(self.__deque)} Updates:\n"]
-      for idx, cfg in enumerate(self.__deque):
-        res.append(f"\nCFG {idx+1} of {len(self.__deque)}\n")
-        res.append(cfg)
-      
-      return "".join(res)
+        res = [f"CFG Changes in last {len(self.__deque)} Updates:\n"]
+        for idx, cfg in enumerate(self.__deque):
+            res.append(f"\nCFG {idx+1} of {len(self.__deque)}\n")
+            res.append(cfg)
+        return "".join(res)
 
 
 class CFGTracker:
@@ -49,44 +47,57 @@ class CFGTracker:
         self.curr_variables_lock = threading.Lock()
         self.curr_variables = {}
 
-        #tracking inputs
+        # tracking inputs
         self.inputs = []
 
+        # ========== NEW memory usage stuff ==========
+        self.memory_usage = {}  # dict[module, list of (offset, line_no, top_stats)]
+        self.mem_lock = threading.Lock()
+
+        self._prev_snapshot = None
+        self._opcode_count = 0
+
     def start_tracking(self):
-        """Start tracking branch coverage"""
+        """Start tracking branch coverage and memory."""
+        # Start tracemalloc
+        tracemalloc.start()
+        self._prev_snapshot = tracemalloc.take_snapshot()
+
         frame = sys._getframe()
         frame.f_trace_opcodes = True
         sys.settrace(self.trace_callback)
 
     def stop_tracking(self):
-        """Stop tracking branch coverage"""
+        """Stop tracking branch coverage and memory usage."""
         sys.settrace(None)
+        # Optionally stop tracemalloc if you want
+        # tracemalloc.stop()
 
     def get_exec_inst(self):
-        self.inst_lock.acquire()
-        cpy = copy.deepcopy(self.executed_insts)
-        self.executed_insts = {}
-        self.inst_lock.release()
-
+        with self.inst_lock:
+            cpy = copy.deepcopy(self.executed_insts)
+            self.executed_insts = {}
         return cpy
 
     def get_inputs(self):
-        self.inst_lock.acquire()
-        cpy = copy.deepcopy(self.inputs)
-        self.inputs = []
-        self.inst_lock.release()
-
+        with self.inst_lock:
+            cpy = copy.deepcopy(self.inputs)
+            self.inputs = []
         return cpy
         
     def get_variable_values(self):
-        self.curr_variables_lock.acquire()
-        cpy = copy.deepcopy(self.curr_variables)
-        # print(cpy)
-        self.curr_variables_lock.release()
-
+        with self.curr_variables_lock:
+            cpy = copy.deepcopy(self.curr_variables)
         return cpy
-    
 
+    def get_memory_usage(self):
+        """Returns and clears stored memory usage stats."""
+        with self.mem_lock:
+            cpy = copy.deepcopy(self.memory_usage)
+            self.memory_usage = {}
+        return cpy
+
+    @staticmethod
     def get_line_from_frame(frame):
         lineno = frame.f_code.co_firstlineno
         byte_offset = frame.f_lasti
@@ -97,20 +108,19 @@ class CFGTracker:
                 break
             current_line = line
         return current_line
-    
 
     def trace_callback(
         self, frame: types.FrameType, event: str, arg: any
     ) -> Optional[Callable]:
-        """Trace function to track executed branches"""
         code = frame.f_code
+        # filter out irrelevant files
         if ".jac" not in code.co_filename:
             return self.trace_callback
 
         if event == "call":
             frame.f_trace_opcodes = True
+
         elif event == "opcode":
-            # edge case to handle executing code not within a function
             filename = os.path.basename(code.co_filename)
             module = (
                 code.co_name
@@ -118,72 +128,40 @@ class CFGTracker:
                 else os.path.splitext(filename)[0]
             )
 
-            self.inst_lock.acquire()
-            if module not in self.executed_insts:
-                self.executed_insts[module] = []
-            line_no = CFGTracker.get_line_from_frame(frame)
-            # source_line = linecache.getline(frame.f_code.co_filename, line_no).strip()
-            # print(f"Opcode at offset {frame.f_lasti} corresponds to line {line_no}: {source_line}")
-            self.executed_insts[module].append((frame.f_lasti, line_no))
-            self.inst_lock.release()
-            variable_dict = {}
-            if "__annotations__" in frame.f_locals:
-                self.curr_variables_lock.acquire()
-                for var_name in frame.f_locals["__annotations__"]:
-                    if var_name == "input_val" and (len(self.inputs) == 0 or frame.f_locals[var_name] != self.inputs[-1]):
-                      self.inputs.append(frame.f_locals[var_name])
+            # 1) Record the executed instruction
+            with self.inst_lock:
+                if module not in self.executed_insts:
+                    self.executed_insts[module] = []
+                line_no = CFGTracker.get_line_from_frame(frame)
+                self.executed_insts[module].append((frame.f_lasti, line_no))
 
-                    variable_dict[var_name] = frame.f_locals[var_name]
-                self.curr_variables[module] = (frame.f_lasti, variable_dict)
-                self.curr_variables_lock.release()
-        # elif event == "line":
-        #     ###
-        #     # this is really circumlocutious, but is also how
-        #     # [watchpoints](https://github.com/gaogaotiantian/watchpoints/tree/master)
-        #     # works
-        #     ###
-        #     try:
-        #         #print(inspect.getsourcefile(frame.f_code))
-        #         #print(frame.f_lineno)
-        #         # TODO: super inefficient but just for now
-        #         # inspect.getsource doesn't seem to work like it does for
-        #         # regular python (see test_tracer.py)
-        #         # NOTE: we're parsing jac lines as python, fingers crossed
-        #         with open(inspect.getsourcefile(frame.f_code)) as file:
-        #             line_asts = ast.parse(file.readlines()[frame.f_lineno - 1].lstrip().rstrip(';'))
-        #         #print("                       ", frame.f_lineno, ast.unparse(line_ast))
-        #     except (IndexError, SyntaxError):
-        #         return self.trace_callback
-        #     #print(ast.dump(a))
-        #     #print(len(a.body))
-        #     assert len(line_asts.body) == 1 # we only parsed one line
-        #     line_ast = line_asts.body[0]
-        #     if isinstance(line_ast, ast.Assign) or isinstance(line_ast, ast.AugAssign):
-        #         # yes, I know this isn't strictly necessary in python
-        #         lhs_ast = None
-        #         rhs_ast = None
-        #         if isinstance(line_ast, ast.Assign):
-        #             assert len(line_ast.targets) == 1, "Only handling single targets right now"
-        #             lhs_ast = line_ast.targets[0]
-        #         elif isinstance(line_ast, ast.AugAssign):
-        #             lhs_ast = line_ast.target
-        #         lhs_var = ast.unparse(lhs_ast)
-        #         rhs_ast = line_ast.value
-        #         # NOTE: for some reason, eval(ast.Expression(rhs_ast)) doesn't work
-        #         rhs_value = eval(ast.unparse(rhs_ast), frame.f_globals, frame.f_locals)
-        #         if isinstance(line_ast, ast.Assign):
-        #             exec(f"{lhs_var} = {rhs_value}\n", frame.f_globals, frame.f_locals)
-        #             print(f"{lhs_var} = {rhs_value}")
-        #         elif isinstance(line_ast, ast.AugAssign):
-        #             exec(f"{lhs_var} += {rhs_value}\n", frame.f_globals, frame.f_locals)
-        #             print(f"{lhs_var} (+)= {rhs_value}")
-        #         #print(frame.f_locals)
-        #         if lhs_var == 'PROGRAM_INPUT':
-        #             if isinstance(line_ast, ast.AugAssign):
-        #                 assert False, "Unimplemented"
-        #             print("tracer: PROGRAM_INPUT = ", rhs_value)
-        #         # this only silences some of the
-        #         # "RuntimeWarning: assigning None to unbound local" warnings
-        #         with warnings.catch_warnings(action="ignore"):
-        #             frame.f_lineno += 1
+            # 2) Track variables
+            if "__annotations__" in frame.f_locals:
+                with self.curr_variables_lock:
+                    variable_dict = {}
+                    for var_name in frame.f_locals["__annotations__"]:
+                        # capture input if changed
+                        if var_name == "input_val":
+                            if not self.inputs or frame.f_locals[var_name] != self.inputs[-1]:
+                                self.inputs.append(frame.f_locals[var_name])
+                        variable_dict[var_name] = frame.f_locals[var_name]
+                    self.curr_variables[module] = (frame.f_lasti, variable_dict)
+
+            # 3) [NEW] Memory usage with tracemalloc
+            #    - Here we do it for every opcode, but for performance you might do every Nth
+            self._opcode_count += 1
+            # e.g. only snapshot every Nth instructions to reduce overhead
+            n = 20
+            if self._opcode_count % n == 0:
+                snapshot = tracemalloc.take_snapshot()
+                if self._prev_snapshot is not None:
+                    stats = snapshot.compare_to(self._prev_snapshot, "lineno")
+                    top_stats = stats[:5]  # top 5 changes
+                    with self.mem_lock:
+                        if module not in self.memory_usage:
+                            self.memory_usage[module] = []
+                        # Store offset, line_no, plus the top stats for that range
+                        self.memory_usage[module].append((frame.f_lasti, line_no, top_stats))
+                self._prev_snapshot = snapshot
+
         return self.trace_callback

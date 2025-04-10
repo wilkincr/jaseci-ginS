@@ -11,9 +11,6 @@ from jaclang.runtimelib.gins.model import Gemini
 from jaclang.runtimelib.gins.tracer import CFGTracker, CfgDeque
 from pydantic import BaseModel
 
-
-# Helper class to maintain a fixed deque size
-
 class ShellGhost:
     def __init__(self):
         self.cfgs = None
@@ -34,16 +31,15 @@ class ShellGhost:
 
         self.logger = logging.getLogger()
         if self.logger.hasHandlers():
-          self.logger.handlers.clear()
+            self.logger.handlers.clear()
         logging.basicConfig(
-        level=logging.INFO,             # Set the log level
-        format='%(asctime)s - %(message)s', # Set the log message format
-        datefmt='%Y-%m-%d %H:%M:%S',    # Set the timestamp format
-          handlers=[
-              logging.FileHandler("test.txt", mode='a'),  # Log to a file in append mode
-          ]
+            level=logging.INFO,           # Set the log level
+            format='%(asctime)s - %(message)s', # Log message format
+            datefmt='%Y-%m-%d %H:%M:%S',  # Timestamp format
+            handlers=[
+                logging.FileHandler("test.txt", mode='a'),  # Log to a file (append mode)
+            ]
         )
-        
 
     def set_cfgs(self, cfgs):
         self.cfg_cv.acquire()
@@ -54,7 +50,7 @@ class ShellGhost:
     def update_cfg_deque(self, cfg, module):
         self.deque_lock.acquire()
         if module not in self.__cfg_deque_dict:
-          self.__cfg_deque_dict[module] = CfgDeque(self.__cfg_deque_size)
+            self.__cfg_deque_dict[module] = CfgDeque(self.__cfg_deque_size)
         self.__cfg_deque_dict[module].add_cfg(cfg)
         self.deque_lock.release()
 
@@ -66,10 +62,9 @@ class ShellGhost:
         self.__ghost_thread.start()
 
     def set_finished(self, exception: Exception = None):
-        self.finished_exception_lock.acquire()
-        self.exception = exception
-        self.finished = True
-        self.finished_exception_lock.release()
+        with self.finished_exception_lock:
+            self.exception = exception
+            self.finished = True
 
     def prompt_direct(self):
       script = """
@@ -299,67 +294,44 @@ class ShellGhost:
         print("PROMPT: ", prompt)
         response = self.model.generate_structured(prompt)
         return response
+
     def worker(self):
-        # get static cfgs
         self.cfg_cv.acquire()
-        if self.cfgs == None:
-            print("waiting")
+        if self.cfgs is None:
+            print("waiting for cfgs")
             self.cfg_cv.wait()
-        # for module_name, cfg in self.cfgs.items():
-        #     print(f"Name: {module_name}")
         self.cfg_cv.release()
 
-        # Once cv has been notifie, self.cfgs is no longer accessed across threads
         current_executing_bbs = {}
 
         def update_cfg():
             exec_insts = self.tracker.get_exec_inst()
 
             # don't prompt if there's nothing new
-            if exec_insts == {}:
+            if not exec_insts:
                 return
 
             for module, offset_list in exec_insts.items():
-                # print(offset_list)
                 try:
                     cfg = self.cfgs[module]
 
-                    if (
-                        module not in current_executing_bbs
-                    ):  # this means start at bb0, set exec count for bb0 to 1
+                    if module not in current_executing_bbs:
+                        # means start at bb0
                         current_executing_bbs[module] = 0
                         cfg.block_map.idx_to_block[0].exec_count = 1
 
-
                     for offset_tuple in offset_list:
                         offset = offset_tuple[0]
-                        # print(offset)
-                        if (
-                            offset
-                            not in cfg.block_map.idx_to_block[
-                                current_executing_bbs[module]
-                            ].bytecode_offsets
-                        ):
+                        if offset not in cfg.block_map.idx_to_block[current_executing_bbs[module]].bytecode_offsets:
                             for next_bb in cfg.edges[current_executing_bbs[module]]:
-                                if (
-                                    offset
-                                    in cfg.block_map.idx_to_block[
-                                        next_bb
-                                    ].bytecode_offsets
-                                ):
-                                    cfg.edge_counts[
-                                        (current_executing_bbs[module], next_bb)
-                                    ] += 1
-                                    # do some deque op
+                                if offset in cfg.block_map.idx_to_block[next_bb].bytecode_offsets:
+                                    cfg.edge_counts[(current_executing_bbs[module], next_bb)] += 1
                                     cfg.block_map.idx_to_block[next_bb].exec_count += 1
                                     current_executing_bbs[module] = next_bb
                                     break
-                        assert (
-                            offset
-                            in cfg.block_map.idx_to_block[
-                                current_executing_bbs[module]
-                            ].bytecode_offsets
-                        )
+                        # sanity check
+                        assert offset in cfg.block_map.idx_to_block[current_executing_bbs[module]].bytecode_offsets
+
                 except Exception as e:
                     self.set_finished(e)
                     print(e)
@@ -371,26 +343,85 @@ class ShellGhost:
             self.logger.info(cfg.to_json())
             print(f"CURRENT INPUTS: {self.tracker.get_inputs()}")
 
-        self.finished_exception_lock.acquire()
-        while not self.finished:
-            self.finished_exception_lock.release()
+        # -----------
+        # NEW FUNCTION: store_memory_usage
+        # -----------
+        def store_memory_usage():
+            print("Updating memory usage")
+            """
+            Pull memory usage data from the tracker and store or log it.
+            You can associate it with your CFG or just log it.
+            """
+            mem_data = self.tracker.get_memory_usage()
+            if not mem_data:
+                return  # Nothing to process
 
-            time.sleep(3)
-            print("\nUpdating cfgs")
-            update_cfg()
-            # self.logger.info(self.prompt_llm())
-            # print(f"history size: {len(self.__cfg_deque_dict['hot_path'])}")
-            self.finished_exception_lock.acquire()
-            # time.sleep(1)
+            for module, usage_list in mem_data.items():
+                # Each usage_list entry is typically (offset, line_no, top_stats)
+                # if you're using tracemalloc's snapshot.compare_to().
+                print(f"Memory usage data for {module}:")
+                for (offset, line_no, top_stats) in usage_list:
+                    # Example of logging or storing
+                    print(f"[MEM-Usage] Module={module}, offset={offset}, line={line_no}, size_diffs={[top_stat.size_diff for top_stat in top_stats]}")
+                    
+                    # You can also correlate the offset with a block in self.cfgs[module]
+                    # if you want to store memory usage in each block, etc.
+        
+        def organize_memory_usage_by_bb():
+            """
+            Given a CFG (with its block_map which includes a set of offsets for each block)
+            and memory usage data in the form:
+            { module: [ (offset, line_no, top_stats), ... ], ... },
+            determine which basic block each memory usage record belongs to,
+            and store (or return) a dict mapping block_id to a list of memory usage records.
+            """
+            usage_by_bb = {}  # dict: block_id -> list of memory snapshots
+            mem_data = self.tracker.get_memory_usage()
+            # For each module in mem_data (your mem_data keys should match module names used in cfg)
+            for module, usage_list in mem_data.items():
+                # Get the CFG for the module
+                # (Assuming cfg was built per module and accessible as cfg)
+                for (offset, line_no, top_stats) in usage_list:
+                    # Use a helper: find_block_by_offset() returns the block id (or None) for a given offset.
+                    for block_id, block in self.cfgs[module].block_map.idx_to_block.items():
+                    # Check if any instruction in this block matches the offset.
+                        if any(instr.offset == offset for instr in block.instructions):
+                            break
+                    if block_id is not None:
+                        if block_id not in usage_by_bb:
+                            usage_by_bb[block_id] = []
+                        # We convert the top_stats to a serializable (or string) form if needed.
+                        usage_record = {
+                            "offset": offset,
+                            "line_no": line_no,
+                            "top_stats": [str(stat.size_diff) for stat in top_stats]
+                        }
+                        usage_by_bb[block_id].append(usage_record)
+                    else:
+                        print(f"Memory usage at offset {offset} did not map to any basic block.")
+            for block_id, usage_records in usage_by_bb.items():
+                print(f"Memory usage for block {block_id}:")
+                for usage_record in usage_records:
+                    print(f"[MEM-Usage] offset={usage_record['offset']}, line={usage_record['line_no']}, size_diffs={usage_record['top_stats']}")
 
-        self.finished_exception_lock.release()
+        with self.finished_exception_lock:
+            while not self.finished:
+                self.finished_exception_lock.release()
+
+                time.sleep(3)
+                print("\nUpdating cfgs")
+                update_cfg()
+                # store_memory_usage()  # <-- Call the new function here
+                organize_memory_usage_by_bb()
+
+
+                self.finished_exception_lock.acquire()
 
         print("\nUpdating cfgs at the end")
         update_cfg()
+        # store_memory_usage()  # one last call at the end
+        organize_memory_usage_by_bb()
+
         response = self.prompt_for_runtime()
         print(response["behavior_description"])
         print(response["error_list"])
-        
-        # print(self.__cfg_deque_dict['hot_path'].get_cfg_repr())
-        # self.logger.info(self.prompt_llm())
-        
