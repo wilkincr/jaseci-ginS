@@ -4,10 +4,12 @@ with entry {
     z:int = x + y;
     for i in range(49) {
         x = 4 * i + y * (z);
-        if x % 2 == 0:
+        if x % 2 == 0 {
             y = 4;
-        else:
+        }
+        else {
             y = 0;
+        }
     }
     if y != 0:
         z = x / y;
