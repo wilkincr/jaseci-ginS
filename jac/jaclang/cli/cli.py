@@ -78,6 +78,7 @@ def run(
     """Run the specified .jac file."""
     # if no session specified, check if it was defined when starting the command shell
     # otherwise default to jaclang.session
+    absolute_source_path = os.path.abspath(filename)
     if session == "":
         session = (
             cmd_registry.args.session
@@ -92,7 +93,7 @@ def run(
     mod = mod[:-4]
     jctx = ExecutionContext.create(session=session)
     if gins:
-        JacMachine(base).attach_gin(ShellGhost())
+        JacMachine(base).attach_gin(ShellGhost(source_file_path=absolute_source_path))
 
     if filename.endswith(".jac"):
         try:

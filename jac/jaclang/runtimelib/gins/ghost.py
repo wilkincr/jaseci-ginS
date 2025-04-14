@@ -6,6 +6,8 @@ import enum
 import threading
 import time
 import logging
+import types
+import shutil 
 
 from jaclang.runtimelib.gins.model import Gemini
 from jaclang.runtimelib.gins.tracer import CFGTracker, CfgDeque
@@ -15,7 +17,7 @@ from pydantic import BaseModel
 # Helper class to maintain a fixed deque size
 
 class ShellGhost:
-    def __init__(self):
+    def __init__(self, source_file_path: str | None = None):
         self.cfgs = None
         self.cfg_cv = threading.Condition()
         self.tracker = CFGTracker()
@@ -31,6 +33,7 @@ class ShellGhost:
         self.deque_lock = threading.Lock()
         self.__cfg_deque_dict = dict()
         self.__cfg_deque_size = 10
+        self.source_file_path = os.path.abspath(source_file_path) if source_file_path else None
 
         self.logger = logging.getLogger()
         if self.logger.hasHandlers():
@@ -299,6 +302,145 @@ class ShellGhost:
         print("PROMPT: ", prompt)
         response = self.model.generate_structured(prompt)
         return response
+    def auto_fix_code(self, error):
+        prompt = """I have a program with a runtime error.
+        Up to last {history_size} CFGs recorded:
+        {cfgs}
+        Instructions per basic block:
+        {instructions}
+        Semantic and Type information from source code:
+        {sem_ir}
+
+        The program has the following runtime error:
+        {error}
+
+        Please provide ONLY actual executable code that fixes this error.
+        The code should handle the error case properly following these requirements:
+        1. Don't change the overall behavior of the program
+        2. Add appropriate safety checks to prevent the error
+        3. Return only the code that needs to be injected, no explanations
+        
+        Format your response as a Python code block starting with ```python and ending with ```
+        """
+        
+        cfg_string = ""
+        ins_string = ""
+        for module, cfg in self.cfgs.items():
+            cfg_history = "None at this time"
+            if module in self.__cfg_deque_dict:
+                cfg_history = self.__cfg_deque_dict[module].get_cfg_repr()
+            cfg_string += f"Module: {module}\n{cfg_history}"
+            ins_string += f"Module: {module}\n{cfg.display_instructions()}"
+        
+        formatted_prompt = prompt.format(
+            history_size=self.__cfg_deque_size,
+            cfgs=cfg_string,
+            instructions=ins_string,
+            sem_ir=self.sem_ir.pp(),
+            error=error
+        )
+        
+        if self.variable_values is not None:
+            formatted_prompt += "\nCurrent variable values at the specified bytecode offset:"
+            for module, var_map in self.variable_values.items():
+                formatted_prompt += f"\nModule {module}: Offset: {var_map[0]}, Variables: {str(var_map[1])}"
+        
+        response = self.model.generate(formatted_prompt)
+        lines = response.strip().splitlines()
+        response = "\n".join(line for line in lines if not line.strip().startswith("```"))
+            
+        return response
+    
+    def apply_fix_to_source(self, error, fixed_code):
+        try:
+            line_number = int(error.get("error_line_number", 0))
+            if line_number <= 0:
+                print(f"Error: Invalid line number received: {error.get('error_line_number')}")
+                return False
+        except (ValueError, TypeError):
+            print(f"Error: Could not parse line number from error data: {error.get('error_line_number')}")
+            return False
+
+        if not fixed_code or not isinstance(fixed_code, str):
+             print("Error: Invalid or empty fixed_code received.")
+             return False
+
+        print(f"Target line number: {line_number}")
+        print(f"Proposed fix code:\n---\n{fixed_code}\n---")
+
+        source_file = self.source_file_path
+        if not source_file:
+            print("Error: Source file path is not set in ShellGhost instance.")
+            return False
+
+        if not os.path.exists(source_file):
+            print(f"Error: Source file path does not exist: {source_file}")
+            return False
+
+        print(f"Located source file: {source_file}")
+
+        try:
+            with open(source_file, 'r', encoding='utf-8') as f: 
+                lines = f.readlines()
+        except Exception as e:
+            print(f"Error reading source file '{source_file}': {e}")
+            return False
+
+        if line_number > len(lines):
+             print(f"Error: Line number {line_number} is out of bounds for file '{source_file}' (length: {len(lines)} lines).")
+             return False
+
+        try:
+            original_line_content = lines[line_number - 1]
+            indent = original_line_content[:len(original_line_content) - len(original_line_content.lstrip())]
+            print(f"Original line ({line_number}): {original_line_content.strip()}")
+            print(f"Detected indent: '{indent}' (length: {len(indent)})")
+
+            fixed_lines_indented = []
+            for line in fixed_code.strip().splitlines(): 
+                fixed_lines_indented.append(indent + line)
+
+            fixed_code_indented = "\n".join(fixed_lines_indented) + "\n"
+            print(f"Indented fix code:\n---\n{fixed_code_indented}---")
+
+        except IndexError:
+            print(f"Error: Could not access line {line_number} for indentation check (file length {len(lines)}).")
+            return False
+        except Exception as e:
+            print(f"Error during indentation handling: {e}")
+            return False
+
+
+        backup_file = source_file + ".bak"
+        try:
+            shutil.copy2(source_file, backup_file)
+            print(f"Created backup file: {backup_file}")
+        except Exception as e:
+            print(f"CRITICAL Error: Failed to create backup file '{backup_file}': {e}")
+            print("Aborting fix application to prevent data loss.")
+            return False 
+
+        lines[line_number - 1] = fixed_code_indented
+
+        try:
+            with open(source_file, 'w', encoding='utf-8') as f: 
+                f.writelines(lines)
+        except Exception as e:
+            print(f"Error writing fixed code back to '{source_file}': {e}")
+            print(f"Attempting to restore original file from backup '{backup_file}'...")
+            try:
+                shutil.copy2(backup_file, source_file)
+                print("Successfully restored original file from backup.")
+            except Exception as restore_e:
+                print(f"Failed to write fix AND failed to restore from backup: {restore_e}")
+            return False 
+
+
+        print(f"Successfully applied fix to '{source_file}' at line {line_number}.")
+        print("--- Code Fix Application Complete ---")
+        return True
+
+    
     def worker(self):
         # get static cfgs
         self.cfg_cv.acquire()
@@ -390,7 +532,88 @@ class ShellGhost:
         response = self.prompt_for_runtime()
         print(response["behavior_description"])
         print(response["error_list"])
+        if len(response['error_list']) > 0:
+                fixes_applied = False
+                for error in response['error_list']:
+                    fixed_code = self.auto_fix_code(error)
+                    if fixed_code:
+                        print(f"Fixed code: {fixed_code}")
+                        # Apply the fix to the source file
+                        if self.apply_fix_to_source(error, fixed_code):
+                            fixes_applied = True
+                            print(f"Fix for {error['type_of_error']} at line {error['error_line_number']} applied!")
+                        else:
+                            print(f"Failed to apply fix for {error['type_of_error']} at line {error['error_line_number']}")
+                
+                if fixes_applied:
+                    print("\nSome errors were fixed. Please run the program again to see the fixed code in action.")
+
         
         # print(self.__cfg_deque_dict['hot_path'].get_cfg_repr())
         # self.logger.info(self.prompt_llm())
+    
+    # def inject_code(self, code_to_inject: str, method_name: str = "worker", position: str = "before") -> dict:
+    #     result = {
+    #         "success": False,
+    #         "error": None,
+    #         "method": method_name,
+    #         "position": position
+    #     }
+        
+    #     try:
+    #         if not hasattr(self, method_name):
+    #             result["error"] = f"Method {method_name} not found in ShellGhost"
+    #             return result
+                
+    #         original_method = getattr(self, method_name)
+            
+    #         if not hasattr(self, "_original_methods"):
+    #             self._original_methods = {}
+    #         self._original_methods[method_name] = original_method
+            
+    #         method_context = {
+    #             "self": self,
+    #             "original_method": original_method,
+    #         }
+            
+    #         if position == "before":
+    #             def wrapper(*args, **kwargs):
+    #                 print(f"Executing injected code before {method_name}")
+    #                 exec(code_to_inject, globals(), {**method_context, "args": args, "kwargs": kwargs})
+    #                 return original_method(*args, **kwargs)
+    #         elif position == "after":
+    #             def wrapper(*args, **kwargs):
+    #                 result = original_method(*args, **kwargs)
+    #                 print(f"Executing injected code after {method_name}")
+    #                 exec(code_to_inject, globals(), {**method_context, "args": args, "kwargs": kwargs, "result": result})
+    #                 return result
+    #         elif position == "replace":
+    #             def wrapper(*args, **kwargs):
+    #                 print(f"Executing injected code replacing {method_name}")
+    #                 local_vars = {**method_context, "args": args, "kwargs": kwargs}
+    #                 exec(code_to_inject, globals(), local_vars)
+    #                 return local_vars.get("result", None)
+    #         else:
+    #             result["error"] = f"Invalid position: {position}"
+    #             return result
+                
+    #         setattr(self, method_name, wrapper)
+            
+    #         if not hasattr(self, "restore_original_method"):
+    #             def restore_original_method(self, method_name):
+    #                 if hasattr(self, "_original_methods") and method_name in self._original_methods:
+    #                     setattr(self, method_name, self._original_methods[method_name])
+    #                     del self._original_methods[method_name]
+    #                     return True
+    #                 return False
+                
+    #             self.restore_original_method = types.MethodType(restore_original_method, self)
+            
+    #         result["success"] = True
+    #         return result
+        
+    #     except Exception as e:
+    #         import traceback
+    #         result["error"] = f"Error injecting into method: {str(e)}\n{traceback.format_exc()}"
+    #         return result
         
