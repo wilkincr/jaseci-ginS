@@ -6,6 +6,8 @@ import enum
 import threading
 import time
 import logging
+import psutil
+import time
 
 from jaclang.runtimelib.gins.model import Gemini
 from jaclang.runtimelib.gins.tracer import CFGTracker, CfgDeque
@@ -337,6 +339,7 @@ class ShellGhost:
         self.cfg_cv.release()
 
         current_executing_bbs = {}
+        bb_entry_time = {}
 
         def update_cfg():
             exec_insts = self.tracker.get_exec_inst()
@@ -353,12 +356,23 @@ class ShellGhost:
                         # means start at bb0
                         current_executing_bbs[module] = 0
                         cfg.block_map.idx_to_block[0].exec_count = 1
+                        bb_entry_time[module] = time.time()
 
                     for offset_tuple in offset_list:
                         offset = offset_tuple[0]
+                        current_bb = current_executing_bbs[module]
                         if offset not in cfg.block_map.idx_to_block[current_executing_bbs[module]].bytecode_offsets:
                             for next_bb in cfg.edges[current_executing_bbs[module]]:
                                 if offset in cfg.block_map.idx_to_block[next_bb].bytecode_offsets:
+
+                                    now = time.time()
+                                    if module in bb_entry_time:
+                                        elapsed = now - bb_entry_time[module]
+                                        cfg.block_map.idx_to_block[current_bb].total_time += elapsed
+                                    else:
+                                        elapsed = 0
+                                    bb_entry_time[module] = now
+
                                     cfg.edge_counts[(current_executing_bbs[module], next_bb)] += 1
                                     cfg.block_map.idx_to_block[next_bb].exec_count += 1
                                     current_executing_bbs[module] = next_bb
@@ -434,8 +448,17 @@ class ShellGhost:
                         usage_by_bb[block_id] += sum(stat.size_diff for stat in top_stats)
                     else:
                         print(f"Memory usage at offset {offset} did not map to any basic block.")
-            for block_id, usage_record in usage_by_bb.items():
-                print(f"Memory usage for block {block_id}: {usage_record}")
+            for block_id, usage_records in usage_by_bb.items():
+                print(f"Memory usage for block {block_id}:")
+                for usage_record in usage_records:
+                    print(f"[MEM-Usage] offset={usage_record['offset']}, line={usage_record['line_no']}, size_diffs={usage_record['top_stats']}")
+        
+        def print_block_timings(cfg):
+            """
+            Iterate over all blocks in the CFG and print their execution count and total runtime.
+            """
+            for block_id, block in cfg.block_map.idx_to_block.items():
+                print(f"Block bb{block_id}: exec_count = {block.exec_count}, total_time = {block.total_time:.4f} seconds")
 
         with self.finished_exception_lock:
             while not self.finished:
@@ -450,12 +473,25 @@ class ShellGhost:
 
                 self.finished_exception_lock.acquire()
 
+        for module, current_bb in current_executing_bbs.items():
+            now = time.time()
+            if module in bb_entry_time:
+                elapsed = now - bb_entry_time[module]
+                self.cfgs[module].block_map.idx_to_block[current_bb].total_time += elapsed
+
+
         print("\nUpdating cfgs at the end")
         update_cfg()
         # store_memory_usage()  # one last call at the end
         organize_memory_usage_by_bb()
 
         response = self.prompt_for_runtime()
+        # I could directly change the cfg to add this in or just keep the information here.
+        print("\nBlock timing information:")
+        for module, cfg in self.cfgs.items():
+            print(f"Module: {module}")
+            print_block_timings(cfg)
+
         print(response["behavior_description"])
         print(response["error_list"])
         repo_path = os.path.abspath(os.path.expanduser("~/UMich/jaseci-ginS"))
