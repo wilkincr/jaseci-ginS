@@ -85,3 +85,12 @@ class Gemini(BaseModel):
           response_schema=Response),)
         response_dict = json.loads(response.text)
         return response_dict
+    
+    def fix_errors(self, suggestions, original_text):
+        import google.generativeai as genai
+        prompt = f"""
+            Please fix the following errors in this file: {suggestions}. The original file is: {original_text}.
+            Respond with raw code only — no markdown, no triple quotes.
+            """
+        response = self.model.generate_content(prompt, )
+        return response.text

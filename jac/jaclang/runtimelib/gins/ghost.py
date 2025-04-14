@@ -9,8 +9,7 @@ import logging
 
 from jaclang.runtimelib.gins.model import Gemini
 from jaclang.runtimelib.gins.tracer import CFGTracker, CfgDeque
-from pydantic import BaseModel
-
+from jaclang.runtimelib.gins.ghostwriter import GhostWriter
 class ShellGhost:
     def __init__(self):
         self.cfgs = None
@@ -265,6 +264,12 @@ class ShellGhost:
         Semantic and Type information from source code:
         {sem_ir}"""
 
+        prompt = """I have a program.
+        Up to last {history_size} CFGs recorded:
+        {cfgs},
+        Semantic and Type information from source code:
+        {sem_ir}"""
+
         cfg_string = ""
         ins_string = ""
         for module, cfg in self.cfgs.items():
@@ -274,10 +279,16 @@ class ShellGhost:
             cfg_string += f"Module: {module}\n{cfg_history}"
             ins_string += f"Module: {module}\n{cfg.display_instructions()}"
 
+        # prompt = prompt.format(
+        #     history_size=self.__cfg_deque_size,
+        #     cfgs=cfg_string, 
+        #     instructions=ins_string, 
+        #     sem_ir=self.sem_ir.pp()
+        # )
+
         prompt = prompt.format(
             history_size=self.__cfg_deque_size,
             cfgs=cfg_string, 
-            instructions=ins_string, 
             sem_ir=self.sem_ir.pp()
         )
 
@@ -287,13 +298,36 @@ class ShellGhost:
             for module, var_map in self.variable_values.items():
                 prompt += f"\nModule {module}: Offset: {var_map[0]}, Variables: {str(var_map[1])}"
 
-        prompt +=   """\n given this information, what is the program behavior? What type of runtime error can occurs?
-                    If there are any possible runtime errors, what line number is the instruction that causes the error?
+        # prompt +=   """\n given this information, what is the program behavior? What type of runtime error can occurs?
+        #             If there are any possible runtime errors, what line number is the instruction that causes the error?
+        #             """
+
+        prompt +=   """\n Given this execution behavior at runtime:
+                    What optimizations can be done to improve runtime performance based on the current input?
+                    Consider improvements in algorithms, data structures, or other perforamance related optimizations.
                     """
+
+        if verbose:
+            print(prompt)
                     
         print("PROMPT: ", prompt)
         response = self.model.generate_structured(prompt)
         return response
+    
+    def rewrite_content(self, suggestions, file_path):
+    # 1. Read existing file content
+        with open(file_path, 'r') as f:
+            original_text = f.read()
+
+        # 2. Send request to LLM
+        response = self.model.fix_errors(suggestions, original_text)
+
+        print(response)
+        
+        # 3. Extract the new text
+        # 4. Write the new content to the same file
+        with open(file_path + "_fixed", 'w') as f:
+            f.write(response)
 
     def worker(self):
         self.cfg_cv.acquire()
@@ -389,20 +423,19 @@ class ShellGhost:
                             break
                     if block_id is not None:
                         if block_id not in usage_by_bb:
-                            usage_by_bb[block_id] = []
+                            usage_by_bb[block_id] = 0
                         # We convert the top_stats to a serializable (or string) form if needed.
-                        usage_record = {
-                            "offset": offset,
-                            "line_no": line_no,
-                            "top_stats": [str(stat.size_diff) for stat in top_stats]
-                        }
-                        usage_by_bb[block_id].append(usage_record)
+                        # usage_record = {
+                        #     "offset": offset,
+                        #     "line_no": line_no,
+                        #     "top_stats": [str(stat.size_diff) for stat in top_stats]
+                        # }
+                        # usage_by_bb[block_id].append(usage_record)
+                        usage_by_bb[block_id] += sum(stat.size_diff for stat in top_stats)
                     else:
                         print(f"Memory usage at offset {offset} did not map to any basic block.")
-            for block_id, usage_records in usage_by_bb.items():
-                print(f"Memory usage for block {block_id}:")
-                for usage_record in usage_records:
-                    print(f"[MEM-Usage] offset={usage_record['offset']}, line={usage_record['line_no']}, size_diffs={usage_record['top_stats']}")
+            for block_id, usage_record in usage_by_bb.items():
+                print(f"Memory usage for block {block_id}: {usage_record}")
 
         with self.finished_exception_lock:
             while not self.finished:
@@ -425,3 +458,12 @@ class ShellGhost:
         response = self.prompt_for_runtime()
         print(response["behavior_description"])
         print(response["error_list"])
+        repo_path = os.path.abspath(os.path.expanduser("~/UMich/jaseci-ginS"))
+        ghostwriter = GhostWriter(
+            self.model,
+            repo_path=repo_path,
+            github_token=os.getenv("GITHUB_TOKEN"),
+            github_repo_fullname="wilkincr/jaseci-ginS",
+        )
+        ghostwriter.rewrite_content(response["error_list"], "jac/examples/gins_scripts/example.jac")
+

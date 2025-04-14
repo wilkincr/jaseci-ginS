@@ -12,7 +12,7 @@ import inspect
 import warnings
 import ast
 
-import tracemalloc  # <-- ADDED
+import tracemalloc
 
 
 class CfgDeque:
@@ -51,7 +51,7 @@ class CFGTracker:
         self.inputs = []
 
         # ========== NEW memory usage stuff ==========
-        self.memory_usage = {}  # dict[module, list of (offset, line_no, top_stats)]
+        self.memory_usage = {}  # dict[module, list of (basic block, memory usage)]
         self.mem_lock = threading.Lock()
 
         self._prev_snapshot = None
@@ -151,7 +151,7 @@ class CFGTracker:
             #    - Here we do it for every opcode, but for performance you might do every Nth
             self._opcode_count += 1
             # e.g. only snapshot every Nth instructions to reduce overhead
-            n = 20
+            n = 100
             if self._opcode_count % n == 0:
                 snapshot = tracemalloc.take_snapshot()
                 if self._prev_snapshot is not None:
