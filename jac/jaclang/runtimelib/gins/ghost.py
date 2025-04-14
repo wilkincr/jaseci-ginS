@@ -306,6 +306,8 @@ class ShellGhost:
 
         current_executing_bbs = {}
         bb_entry_time = {}
+        cpu_metrics_history = []
+        sample_interval = 1 
 
         def update_cfg():
             exec_insts = self.tracker.get_exec_inst()
@@ -425,6 +427,29 @@ class ShellGhost:
             for block_id, block in cfg.block_map.idx_to_block.items():
                 print(f"Block bb{block_id}: exec_count = {block.exec_count}, total_time = {block.total_time:.4f} seconds")
 
+        def sample_cpu_io_metrics() -> dict:
+            """
+            Sample of some cpu utilization metrics.
+            """
+            total_cpu_percent = psutil.cpu_percent(interval=0.1)
+            cpu_times = psutil.cpu_times_percent(interval=0.1)
+            cpu_freq = psutil.cpu_freq()
+            cpu_freq_dict = cpu_freq._asdict() if cpu_freq is not None else None
+
+            io_counters = psutil.disk_io_counters()
+            read_bytes = io_counters.read_bytes 
+            write_bytes = io_counters.write_bytes
+
+            return {
+                'total_cpu_percent': total_cpu_percent,
+                'cpu_times': cpu_times._asdict(),
+                'cpu_freq': cpu_freq_dict,
+                'io_read_bytes' : read_bytes,
+                'io_write_bytes' : write_bytes,
+                'read_count': io_counters.read_count,
+                'write_count': io_counters.write_count,
+                }
+
         with self.finished_exception_lock:
             while not self.finished:
                 self.finished_exception_lock.release()
@@ -434,7 +459,11 @@ class ShellGhost:
                 update_cfg()
                 # store_memory_usage()  # <-- Call the new function here
                 organize_memory_usage_by_bb()
-
+                
+                # cpu and io metrics that might be helpful to the llm
+                cpu_sample = sample_cpu_io_metrics()
+                cpu_metrics_history.append(cpu_sample)
+                print("CPU Metrics Sample:", cpu_sample)
 
                 self.finished_exception_lock.acquire()
 
@@ -451,7 +480,7 @@ class ShellGhost:
         organize_memory_usage_by_bb()
 
         response = self.prompt_for_runtime()
-        # I could directly change the cfg to add this in or just keep the information here.
+        #going to move this into fardeen's implementation
         print("\nBlock timing information:")
         for module, cfg in self.cfgs.items():
             print(f"Module: {module}")
