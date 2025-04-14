@@ -8,13 +8,18 @@ import time
 import logging
 import types
 import shutil 
-
+import re
+from collections import defaultdict
 from jaclang.runtimelib.gins.model import Gemini
 from jaclang.runtimelib.gins.tracer import CFGTracker, CfgDeque
 from pydantic import BaseModel
 
 
 # Helper class to maintain a fixed deque size
+def read_source_code(file_path: str) -> str:
+    with open(file_path, 'r') as f:
+        return f.read()
+
 
 class ShellGhost:
     def __init__(self, source_file_path: str | None = None):
@@ -169,7 +174,7 @@ class ShellGhost:
       response = self.model.generate(prompt)
 
       print("\nGin Analysis(With static info):\n", response)
-
+      
     def prompt_llm(self, verbose: bool = False):
         prompt = """I have a program.
         {cfgs},
@@ -264,6 +269,124 @@ class ShellGhost:
 
 
         return response
+
+    def annotate_source_code(self):
+        source_code = read_source_code(self.source_file_path)
+
+        bb_line_map = defaultdict(set)    # line_num -> [bb0]
+        bb_jumps = defaultdict(list)       # bb0 -> [bb1, bb2]
+        instr_line_map = defaultdict(list) 
+
+        for module, cfg in self.cfgs.items():
+            current_bb = None
+
+            last_valid_lineno = None
+
+            for line in cfg.display_instructions().splitlines():
+                if match := re.search(r'^(?:Node )?(bb\d+):', line):
+                    current_bb = match.group(1)
+
+                elif "Instr:" in line and current_bb:
+                    m = re.search(r'Lineno=(\d+)', line)
+                    if m:
+                        lineno = int(m.group(1))
+                        last_valid_lineno = lineno
+                    elif last_valid_lineno is not None:
+                        lineno = last_valid_lineno
+                    else:
+                        continue  
+
+                    bb_line_map[lineno].add(current_bb)
+
+                    opname = re.search(r'Opname=([^,]+)', line)
+                    arg = re.search(r'arg=(\S+)', line)
+                    argval = re.search(r'argval=([^,]+)', line)
+                    argrep = re.search(r'argrepr=([^,]+)', line)
+                    jump_t = re.search(r'jump_t=(\w+)', line)
+
+                    opname_str = opname.group(1) if opname else "UNKNOWN"
+                    summary = f"{opname_str}"
+                    if argrep and argrep.group(1):
+                        summary += f" {argrep.group(1)}"
+                    elif argval and argval.group(1) != 'None':
+                        summary += f" {argval.group(1)}"
+                    if jump_t:
+                        summary += f" [jump_t={jump_t.group(1)}]"
+                    if arg and arg.group(1) not in ['None', '']:
+                        summary += f" [arg={arg.group(1)}]"
+
+                    instr_line_map[lineno].append(summary)
+
+
+
+            # Extract jumps between blocks
+            current_bb = None
+            for line in cfg.get_cfg_repr().splitlines():
+                if match := re.search(r'Node (bb\d+)', line):
+                    current_bb = match.group(1)
+                elif match := re.findall(r'-> (bb\d+)', line):
+                    bb_jumps[current_bb].extend(match)
+
+        # Output annotated source
+        annotated_lines = []
+        for idx, line in enumerate(source_code.splitlines(), start=1):
+            # 1. Append original line + BB comment
+            bb_comment = ""
+            if idx in bb_line_map:
+                parts = []
+                for bb in bb_line_map[idx]:
+                    jumps = bb_jumps.get(bb, [])
+                    if jumps:
+                        parts.append(f"{bb} → {', '.join(jumps)}")
+                    else:
+                        parts.append(f"{bb}")
+                bb_comment = "  # " + " | ".join(parts)
+
+            full_line = line + bb_comment
+            annotated_lines.append(full_line)
+
+            # 2. Add single-line instruction array annotation
+            if idx in instr_line_map:
+                instr_group = ", ".join(instr_line_map[idx])
+                annotated_lines.append(" " * 8 + f"#   [{instr_group}]")
+
+        annotated_code = "\n".join(annotated_lines)
+        print(annotated_code)
+        return annotated_code
+
+        # Save to file
+        output_path = self.source_file_path + ".annotated.jac"
+        with open(output_path, "w") as f:
+            f.write(annotated_code)
+        print(f"\n✅ Annotated source written to: {output_path}")
+
+    def prompt_annotated_code(self, annotated_code):
+        prompt = """
+        I have a JacLang program annotated with control flow and bytecode information.
+        Each line may include:
+        - Basic block transitions (e.g., `# bb0 → bb1, bb2`)
+        - Bytecode instructions generated from that line (e.g., `#   [LOAD_NAME n, BINARY_OP /]`)
+
+        Please analyze the code carefully and identify:
+        1. Any **runtime errors** that may occur (e.g., division by zero, calling null values, type mismatches)
+        2. **Logic bugs or unreachable code paths** based on the control flow
+        3. **Control flow oddities**, such as:
+        - basic blocks with no successors
+        - jumps that never happen
+        4. Opportunities for **safety improvements**, such as:
+        - validating inputs before use
+        - guarding against dangerous instructions like division, jumps, or external calls
+        5. Any **performance improvements** or simplifications
+        6. If possible: point out which **line numbers** or **blocks** the issue is in
+
+        Here is the annotated code:
+        """ + annotated_code
+        response = self.model.generate_structured(prompt)
+        print(response)
+        return response
+    
+
+
     def prompt_for_runtime(self, verbose: bool = False):
         prompt = """I have a program.
         Up to last {history_size} CFGs recorded:
@@ -302,6 +425,7 @@ class ShellGhost:
         print("PROMPT: ", prompt)
         response = self.model.generate_structured(prompt)
         return response
+    
     def auto_fix_code(self, error):
         prompt = """I have a program with a runtime error.
         Up to last {history_size} CFGs recorded:
@@ -529,24 +653,26 @@ class ShellGhost:
 
         print("\nUpdating cfgs at the end")
         update_cfg()
-        response = self.prompt_for_runtime()
-        print(response["behavior_description"])
-        print(response["error_list"])
-        if len(response['error_list']) > 0:
-                fixes_applied = False
-                for error in response['error_list']:
-                    fixed_code = self.auto_fix_code(error)
-                    if fixed_code:
-                        print(f"Fixed code: {fixed_code}")
-                        # Apply the fix to the source file
-                        if self.apply_fix_to_source(error, fixed_code):
-                            fixes_applied = True
-                            print(f"Fix for {error['type_of_error']} at line {error['error_line_number']} applied!")
-                        else:
-                            print(f"Failed to apply fix for {error['type_of_error']} at line {error['error_line_number']}")
+        # response = self.prompt_for_runtime()
+        # print(response["behavior_description"])
+        # print(response["error_list"])
+        self.prompt_annotated_code(self.annotate_source_code());
+        
+        # if len(response['error_list']) > 0:
+        #         fixes_applied = False
+        #         for error in response['error_list']:
+        #             fixed_code = self.auto_fix_code(error)
+        #             if fixed_code:
+        #                 print(f"Fixed code: {fixed_code}")
+        #                 # Apply the fix to the source file
+        #                 if self.apply_fix_to_source(error, fixed_code):
+        #                     fixes_applied = True
+        #                     print(f"Fix for {error['type_of_error']} at line {error['error_line_number']} applied!")
+        #                 else:
+        #                     print(f"Failed to apply fix for {error['type_of_error']} at line {error['error_line_number']}")
                 
-                if fixes_applied:
-                    print("\nSome errors were fixed. Please run the program again to see the fixed code in action.")
+        #         if fixes_applied:
+        #             print("\nSome errors were fixed. Please run the program again to see the fixed code in action.")
 
         
         # print(self.__cfg_deque_dict['hot_path'].get_cfg_repr())
