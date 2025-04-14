@@ -79,6 +79,7 @@ class Block:
         self.bytecode_offsets = set(
             [instr.offset for instr in self.instructions if instr.offset is not None]
         )
+        self.total_time = 0.0 # for bb runtime length
 
     def __repr__(self):
         instructions = "\n".join([str(instr) for instr in self.instructions])
