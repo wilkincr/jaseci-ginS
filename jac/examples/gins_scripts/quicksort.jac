@@ -2,7 +2,7 @@ import:py time ;
 
 with entry {
 
-    arr = <>list(range(100));    
+    arr = <>list(range(10000));    
     start_time = time.time();    
     stack = [(0, (len(arr) - 1))];
     

@@ -339,43 +339,18 @@ class ShellGhost:
         current_executing_bbs = {}
 
         def update_cfg():
-            exec_insts = self.tracker.get_exec_inst()
+            exec_insts = self.tracker.get_runtime_info()
+            print("exec_insts", exec_insts)
 
             # don't prompt if there's nothing new
             if not exec_insts:
                 return
 
-            for module, offset_list in exec_insts.items():
-                try:
-                    cfg = self.cfgs[module]
-
-                    if module not in current_executing_bbs:
-                        # means start at bb0
-                        current_executing_bbs[module] = 0
-                        cfg.block_map.idx_to_block[0].exec_count = 1
-
-                    for offset_tuple in offset_list:
-                        offset = offset_tuple[0]
-                        if offset not in cfg.block_map.idx_to_block[current_executing_bbs[module]].bytecode_offsets:
-                            for next_bb in cfg.edges[current_executing_bbs[module]]:
-                                if offset in cfg.block_map.idx_to_block[next_bb].bytecode_offsets:
-                                    cfg.edge_counts[(current_executing_bbs[module], next_bb)] += 1
-                                    cfg.block_map.idx_to_block[next_bb].exec_count += 1
-                                    current_executing_bbs[module] = next_bb
-                                    break
-                        # sanity check
-                        assert offset in cfg.block_map.idx_to_block[current_executing_bbs[module]].bytecode_offsets
-
-                except Exception as e:
-                    self.set_finished(e)
-                    print(e)
-                    break
-
-            self.variable_values = self.tracker.get_variable_values()
-            print("Updating cfg deque")
-            self.update_cfg_deque(cfg.get_cfg_repr(), module)
-            self.logger.info(cfg.to_json())
-            print(f"CURRENT INPUTS: {self.tracker.get_inputs()}")
+            # self.variable_values = self.tracker.get_variable_values()
+            # print("Updating cfg deque")
+            # self.update_cfg_deque(cfg.get_cfg_repr(), module)
+            # self.logger.info(cfg.to_json())
+            # print(f"CURRENT INPUTS: {self.tracker.get_inputs()}")
 
         # -----------
         # NEW FUNCTION: store_memory_usage
@@ -445,25 +420,25 @@ class ShellGhost:
                 print("\nUpdating cfgs")
                 update_cfg()
                 # store_memory_usage()  # <-- Call the new function here
-                organize_memory_usage_by_bb()
+                # organize_memory_usage_by_bb()
 
 
                 self.finished_exception_lock.acquire()
 
         print("\nUpdating cfgs at the end")
-        update_cfg()
+        # update_cfg()
         # store_memory_usage()  # one last call at the end
-        organize_memory_usage_by_bb()
+        # organize_memory_usage_by_bb()
 
         response = self.prompt_for_runtime()
         print(response["behavior_description"])
         print(response["error_list"])
-        repo_path = os.path.abspath(os.path.expanduser("~/UMich/jaseci-ginS"))
-        ghostwriter = GhostWriter(
-            self.model,
-            repo_path=repo_path,
-            github_token=os.getenv("GITHUB_TOKEN"),
-            github_repo_fullname="wilkincr/jaseci-ginS",
-        )
-        ghostwriter.rewrite_content(response["error_list"], "jac/examples/gins_scripts/example.jac")
+        # repo_path = os.path.abspath(os.path.expanduser("~/UMich/jaseci-ginS"))
+        # ghostwriter = GhostWriter(
+        #     self.model,
+        #     repo_path=repo_path,
+        #     github_token=os.getenv("GITHUB_TOKEN"),
+        #     github_repo_fullname="wilkincr/jaseci-ginS",
+        # )
+        # ghostwriter.rewrite_content(response["error_list"], "jac/examples/gins_scripts/example.jac")
 

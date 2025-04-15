@@ -1,18 +1,13 @@
 import types
 from typing import Optional, Callable
 import threading
+import signal
 import sys
 import copy
 import os
-import traceback
-import linecache
 import dis
-from collections import deque
-import inspect
-import warnings
-import ast
+from collections import deque, defaultdict
 
-import tracemalloc
 
 
 class CfgDeque:
@@ -41,11 +36,12 @@ class CfgDeque:
 
 class CFGTracker:
     def __init__(self):
-        self.executed_insts = {}
-        self.inst_lock = threading.Lock()
-
+       
         self.curr_variables_lock = threading.Lock()
         self.curr_variables = {}
+        self.line_freq = defaultdict(int)
+        self.var_value_freq = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
+
 
         # tracking inputs
         self.inputs = []
@@ -57,111 +53,60 @@ class CFGTracker:
         self._prev_snapshot = None
         self._opcode_count = 0
 
-    def start_tracking(self):
-        """Start tracking branch coverage and memory."""
-        # Start tracemalloc
-        tracemalloc.start()
-        self._prev_snapshot = tracemalloc.take_snapshot()
 
-        frame = sys._getframe()
-        frame.f_trace_opcodes = True
-        sys.settrace(self.trace_callback)
+    PRIMITIVES = (int, float, str, bool, type(None))
+    SKIP_VARS = {"__name__", "__doc__", "__package__", "__loader__", "__spec__", "__file__"}
 
-    def stop_tracking(self):
-        """Stop tracking branch coverage and memory usage."""
-        sys.settrace(None)
-        # Optionally stop tracemalloc if you want
-        # tracemalloc.stop()
 
-    def get_exec_inst(self):
-        with self.inst_lock:
-            cpy = copy.deepcopy(self.executed_insts)
-            self.executed_insts = {}
-        return cpy
+    def cpu_sample_handler(self, signum, frame):
+        print("CPU Sample")
+        if frame is None:
+            return
 
-    def get_inputs(self):
-        with self.inst_lock:
-            cpy = copy.deepcopy(self.inputs)
-            self.inputs = []
-        return cpy
+        fname = frame.f_code.co_name
+        lineno = frame.f_lineno
+        print(lineno)
+        self.line_freq[lineno] += 1
+        print(f"{fname}:{lineno}")
+        local_vars = frame.f_locals
+        for name, value in local_vars.items():
+            if name in self.SKIP_VARS:
+                continue
+            if isinstance(value, self.PRIMITIVES):
+                var_key = (fname, lineno)
+                self.var_value_freq[var_key][name][value] += 1
+
+
+    def start_sampling(self, interval_sec=0.1):
+        print("Sending signal")
+        signal.signal(signal.SIGALRM, self.cpu_sample_handler)
+        signal.setitimer(signal.ITIMER_REAL, interval_sec, interval_sec)
+    
+    def stop_sampling(self):
+        signal.setitimer(signal.ITIMER_REAL, 0)
+
+    
+    def get_runtime_info(self, top_k=5):
+        runtime_info = {}
+        for (fname, lineno), var_dict in self.var_value_freq.items():
+            var_summary = []
+            for var_name, freq_dict in var_dict.items():
+                top_k = sorted(freq_dict.items(), key=lambda x: -x[1])[:5]
+                var_summary.append((var_name, top_k))
+                runtime_info[(fname, lineno)] = (self.line_freq[lineno], var_summary)
         
-    def get_variable_values(self):
-        with self.curr_variables_lock:
-            cpy = copy.deepcopy(self.curr_variables)
-        return cpy
+        print(runtime_info)
+        return runtime_info
 
-    def get_memory_usage(self):
-        """Returns and clears stored memory usage stats."""
-        with self.mem_lock:
-            cpy = copy.deepcopy(self.memory_usage)
-            self.memory_usage = {}
-        return cpy
 
-    @staticmethod
-    def get_line_from_frame(frame):
-        lineno = frame.f_code.co_firstlineno
-        byte_offset = frame.f_lasti
-        line_starts = list(dis.findlinestarts(frame.f_code))
-        current_line = lineno
-        for offset, line in line_starts:
-            if byte_offset < offset:
-                break
-            current_line = line
-        return current_line
-
-    def trace_callback(
-        self, frame: types.FrameType, event: str, arg: any
-    ) -> Optional[Callable]:
-        code = frame.f_code
-        # filter out irrelevant files
-        if ".jac" not in code.co_filename:
-            return self.trace_callback
-
-        if event == "call":
-            frame.f_trace_opcodes = True
-
-        elif event == "opcode":
-            filename = os.path.basename(code.co_filename)
-            module = (
-                code.co_name
-                if code.co_name != "<module>"
-                else os.path.splitext(filename)[0]
-            )
-
-            # 1) Record the executed instruction
-            with self.inst_lock:
-                if module not in self.executed_insts:
-                    self.executed_insts[module] = []
-                line_no = CFGTracker.get_line_from_frame(frame)
-                self.executed_insts[module].append((frame.f_lasti, line_no))
-
-            # 2) Track variables
-            if "__annotations__" in frame.f_locals:
-                with self.curr_variables_lock:
-                    variable_dict = {}
-                    for var_name in frame.f_locals["__annotations__"]:
-                        # capture input if changed
-                        if var_name == "input_val":
-                            if not self.inputs or frame.f_locals[var_name] != self.inputs[-1]:
-                                self.inputs.append(frame.f_locals[var_name])
-                        variable_dict[var_name] = frame.f_locals[var_name]
-                    self.curr_variables[module] = (frame.f_lasti, variable_dict)
-
-            # 3) [NEW] Memory usage with tracemalloc
-            #    - Here we do it for every opcode, but for performance you might do every Nth
-            self._opcode_count += 1
-            # e.g. only snapshot every Nth instructions to reduce overhead
-            n = 100
-            if self._opcode_count % n == 0:
-                snapshot = tracemalloc.take_snapshot()
-                if self._prev_snapshot is not None:
-                    stats = snapshot.compare_to(self._prev_snapshot, "lineno")
-                    top_stats = stats[:5]  # top 5 changes
-                    with self.mem_lock:
-                        if module not in self.memory_usage:
-                            self.memory_usage[module] = []
-                        # Store offset, line_no, plus the top stats for that range
-                        self.memory_usage[module].append((frame.f_lasti, line_no, top_stats))
-                self._prev_snapshot = snapshot
-
-        return self.trace_callback
+    # @staticmethod
+    # def get_line_from_frame(frame):
+    #     lineno = frame.f_code.co_firstlineno
+    #     byte_offset = frame.f_lasti
+    #     line_starts = list(dis.findlinestarts(frame.f_code))
+    #     current_line = lineno
+    #     for offset, line in line_starts:
+    #         if byte_offset < offset:
+    #             break
+    #         current_line = line
+    #     return current_line

@@ -353,9 +353,10 @@ class JacImporter(Importer):
                 if JacMachine.get().gin:
                     try:
                         with sys_path_context(spec.caller_dir):
-                            JacMachine.get().gin.tracker.start_tracking()
+                            JacMachine.get().gin.tracker.start_sampling()
+                            print("Started sampling")
                             exec(codeobj, module.__dict__)
-                            JacMachine.get().gin.tracker.stop_tracking()
+                            JacMachine.get().gin.tracker.stop_sampling()
                             JacMachine.get().gin.set_finished(None)
                     except Exception as e:
                         logger.error(e)

@@ -806,3 +806,14 @@ The exact frequencies for bb7, bb8, bb9, bb10, bb12 and bb13 depend on how many 
     8 |             y = 4;
     9 |         else:
 2025-04-14 14:59:43 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 1, 'freq': 1}]}, {'bb_id': 1, 'freq': 50, 'predicted_edges': [{'edge_to_bb_id': 4, 'freq': 0}, {'edge_to_bb_id': 3, 'freq': 0}, {'edge_to_bb_id': 2, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 4, 'freq': 1}, {'edge_to_bb_id': 3, 'freq': 48}, {'edge_to_bb_id': 2, 'freq': 1}]}, {'bb_id': 2, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 1, 'freq': 1}]}, {'bb_id': 3, 'freq': 48, 'predicted_edges': [{'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 1, 'freq': 48}]}, {'bb_id': 4, 'freq': 1, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-15 11:37:40 - reentrant call inside <_io.BufferedWriter name='<stdout>'>
+2025-04-15 11:37:40 - Error: reentrant call inside <_io.BufferedWriter name='<stdout>'>
+   53 |     
+   54 |     def cpu_sample_handler(self, signum, frame):
+   55 |         print("CPU Sample")
+      |        ^^^^^^^^^^^^^^^^^^^
+   56 |         if frame is None:
+   57 |             return
+  at cpu_sample_handler() /home/connorwilkinson11/UMich/jaseci-ginS/jac/jaclang/runtimelib/gins/tracer.py:55
+  at cpu_sample_handler() /home/connorwilkinson11/UMich/jaseci-ginS/jac/jaclang/runtimelib/gins/tracer.py:64
+  at <module> /home/connorwilkinson11/UMich/jaseci-ginS/jac/examples/gins_scripts/quicksort.jac:26
