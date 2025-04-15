@@ -11,6 +11,7 @@ from collections import deque
 import inspect
 import warnings
 import ast
+import time 
 
 import tracemalloc
 
@@ -133,7 +134,7 @@ class CFGTracker:
                 if module not in self.executed_insts:
                     self.executed_insts[module] = []
                 line_no = CFGTracker.get_line_from_frame(frame)
-                self.executed_insts[module].append((frame.f_lasti, line_no))
+                self.executed_insts[module].append((frame.f_lasti, line_no, time.time()))
 
             # 2) Track variables
             if "__annotations__" in frame.f_locals:
