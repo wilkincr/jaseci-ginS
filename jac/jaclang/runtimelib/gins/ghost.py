@@ -358,22 +358,23 @@ class ShellGhost:
                         # means start at bb0
                         current_executing_bbs[module] = 0
                         cfg.block_map.idx_to_block[0].exec_count = 1
-                        bb_entry_time[module] = time.time()
+                        _, _, first_time = offset_list[0]
+                        bb_entry_time[module] = first_time
 
                     for offset_tuple in offset_list:
                         offset = offset_tuple[0]
+                        timestamp = offset_tuple[2]
                         current_bb = current_executing_bbs[module]
+
                         if offset not in cfg.block_map.idx_to_block[current_executing_bbs[module]].bytecode_offsets:
                             for next_bb in cfg.edges[current_executing_bbs[module]]:
                                 if offset in cfg.block_map.idx_to_block[next_bb].bytecode_offsets:
-
-                                    now = time.time()
                                     if module in bb_entry_time:
-                                        elapsed = now - bb_entry_time[module]
+                                        elapsed = timestamp - bb_entry_time[module]
                                         cfg.block_map.idx_to_block[current_bb].total_time += elapsed
                                     else:
                                         elapsed = 0
-                                    bb_entry_time[module] = now
+                                    bb_entry_time[module] = timestamp
 
                                     cfg.edge_counts[(current_executing_bbs[module], next_bb)] += 1
                                     cfg.block_map.idx_to_block[next_bb].exec_count += 1
@@ -450,11 +451,9 @@ class ShellGhost:
                         usage_by_bb[block_id] += sum(stat.size_diff for stat in top_stats)
                     else:
                         print(f"Memory usage at offset {offset} did not map to any basic block.")
-            for block_id, usage_records in usage_by_bb.items():
-                print(f"Memory usage for block {block_id}:")
-                for usage_record in usage_records:
-                    print(f"[MEM-Usage] offset={usage_record['offset']}, line={usage_record['line_no']}, size_diffs={usage_record['top_stats']}")
-        
+                    for block_id, usage_record in usage_by_bb.items():
+                        print(f"Memory usage for block {block_id}: {usage_record}")
+
         def print_block_timings(cfg):
             """
             Iterate over all blocks in the CFG and print their execution count and total runtime.
