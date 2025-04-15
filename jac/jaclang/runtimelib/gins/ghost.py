@@ -8,21 +8,12 @@ import time
 import logging
 import psutil
 import time
-import types
-import shutil 
-import re
-from collections import defaultdict
+
 from jaclang.runtimelib.gins.model import Gemini
 from jaclang.runtimelib.gins.tracer import CFGTracker, CfgDeque
 from jaclang.runtimelib.gins.ghostwriter import GhostWriter
-
-def read_source_code(file_path: str) -> str:
-    with open(file_path, 'r') as f:
-        return f.read()
-
-
 class ShellGhost:
-    def __init__(self, source_file_path: str | None = None):
+    def __init__(self):
         self.cfgs = None
         self.cfg_cv = threading.Condition()
         self.tracker = CFGTracker()
@@ -38,7 +29,6 @@ class ShellGhost:
         self.deque_lock = threading.Lock()
         self.__cfg_deque_dict = dict()
         self.__cfg_deque_size = 10
-        self.source_file_path = os.path.abspath(source_file_path) if source_file_path else None
 
         self.logger = logging.getLogger()
         if self.logger.hasHandlers():
@@ -172,7 +162,7 @@ class ShellGhost:
       response = self.model.generate(prompt)
 
       print("\nGin Analysis(With static info):\n", response)
-      
+
     def prompt_llm(self, verbose: bool = False):
         prompt = """I have a program.
         {cfgs},
@@ -267,124 +257,6 @@ class ShellGhost:
 
 
         return response
-
-    def annotate_source_code(self):
-        source_code = read_source_code(self.source_file_path)
-
-        bb_line_map = defaultdict(set)    # line_num -> [bb0]
-        bb_jumps = defaultdict(list)       # bb0 -> [bb1, bb2]
-        instr_line_map = defaultdict(list) 
-
-        for module, cfg in self.cfgs.items():
-            current_bb = None
-
-            last_valid_lineno = None
-
-            for line in cfg.display_instructions().splitlines():
-                if match := re.search(r'^(?:Node )?(bb\d+):', line):
-                    current_bb = match.group(1)
-
-                elif "Instr:" in line and current_bb:
-                    m = re.search(r'Lineno=(\d+)', line)
-                    if m:
-                        lineno = int(m.group(1))
-                        last_valid_lineno = lineno
-                    elif last_valid_lineno is not None:
-                        lineno = last_valid_lineno
-                    else:
-                        continue  
-
-                    bb_line_map[lineno].add(current_bb)
-
-                    opname = re.search(r'Opname=([^,]+)', line)
-                    arg = re.search(r'arg=(\S+)', line)
-                    argval = re.search(r'argval=([^,]+)', line)
-                    argrep = re.search(r'argrepr=([^,]+)', line)
-                    jump_t = re.search(r'jump_t=(\w+)', line)
-
-                    opname_str = opname.group(1) if opname else "UNKNOWN"
-                    summary = f"{opname_str}"
-                    if argrep and argrep.group(1):
-                        summary += f" {argrep.group(1)}"
-                    elif argval and argval.group(1) != 'None':
-                        summary += f" {argval.group(1)}"
-                    if jump_t:
-                        summary += f" [jump_t={jump_t.group(1)}]"
-                    if arg and arg.group(1) not in ['None', '']:
-                        summary += f" [arg={arg.group(1)}]"
-
-                    instr_line_map[lineno].append(summary)
-
-
-
-            # Extract jumps between blocks
-            current_bb = None
-            for line in cfg.get_cfg_repr().splitlines():
-                if match := re.search(r'Node (bb\d+)', line):
-                    current_bb = match.group(1)
-                elif match := re.findall(r'-> (bb\d+)', line):
-                    bb_jumps[current_bb].extend(match)
-
-        # Output annotated source
-        annotated_lines = []
-        for idx, line in enumerate(source_code.splitlines(), start=1):
-            # 1. Append original line + BB comment
-            bb_comment = ""
-            if idx in bb_line_map:
-                parts = []
-                for bb in bb_line_map[idx]:
-                    jumps = bb_jumps.get(bb, [])
-                    if jumps:
-                        parts.append(f"{bb} → {', '.join(jumps)}")
-                    else:
-                        parts.append(f"{bb}")
-                bb_comment = "  # " + " | ".join(parts)
-
-            full_line = line + bb_comment
-            annotated_lines.append(full_line)
-
-            # 2. Add single-line instruction array annotation
-            if idx in instr_line_map:
-                instr_group = ", ".join(instr_line_map[idx])
-                annotated_lines.append(" " * 8 + f"#   [{instr_group}]")
-
-        annotated_code = "\n".join(annotated_lines)
-        print(annotated_code)
-        return annotated_code
-
-        # Save to file
-        output_path = self.source_file_path + ".annotated.jac"
-        with open(output_path, "w") as f:
-            f.write(annotated_code)
-        print(f"\n✅ Annotated source written to: {output_path}")
-
-    def prompt_annotated_code(self, annotated_code):
-        prompt = """
-        I have a JacLang program annotated with control flow and bytecode information.
-        Each line may include:
-        - Basic block transitions (e.g., `# bb0 → bb1, bb2`)
-        - Bytecode instructions generated from that line (e.g., `#   [LOAD_NAME n, BINARY_OP /]`)
-
-        Please analyze the code carefully and identify:
-        1. Any **runtime errors** that may occur (e.g., division by zero, calling null values, type mismatches)
-        2. **Logic bugs or unreachable code paths** based on the control flow
-        3. **Control flow oddities**, such as:
-        - basic blocks with no successors
-        - jumps that never happen
-        4. Opportunities for **safety improvements**, such as:
-        - validating inputs before use
-        - guarding against dangerous instructions like division, jumps, or external calls
-        5. Any **performance improvements** or simplifications
-        6. If possible: point out which **line numbers** or **blocks** the issue is in
-
-        Here is the annotated code:
-        """ + annotated_code
-        response = self.model.generate_structured(prompt)
-        print(response)
-        return response
-    
-
-
     def prompt_for_runtime(self, verbose: bool = False):
         prompt = """I have a program.
         Up to last {history_size} CFGs recorded:
@@ -444,145 +316,21 @@ class ShellGhost:
         response = self.model.generate_structured(prompt)
         return response
     
-    def auto_fix_code(self, error):
-        prompt = """I have a program with a runtime error.
-        Up to last {history_size} CFGs recorded:
-        {cfgs}
-        Instructions per basic block:
-        {instructions}
-        Semantic and Type information from source code:
-        {sem_ir}
+    def rewrite_content(self, suggestions, file_path):
+    # 1. Read existing file content
+        with open(file_path, 'r') as f:
+            original_text = f.read()
 
-        The program has the following runtime error:
-        {error}
+        # 2. Send request to LLM
+        response = self.model.fix_errors(suggestions, original_text)
 
-        Please provide ONLY actual executable code that fixes this error.
-        The code should handle the error case properly following these requirements:
-        1. Don't change the overall behavior of the program
-        2. Add appropriate safety checks to prevent the error
-        3. Return only the code that needs to be injected, no explanations
+        print(response)
         
-        Format your response as a Python code block starting with ```python and ending with ```
-        """
-        
-        cfg_string = ""
-        ins_string = ""
-        for module, cfg in self.cfgs.items():
-            cfg_history = "None at this time"
-            if module in self.__cfg_deque_dict:
-                cfg_history = self.__cfg_deque_dict[module].get_cfg_repr()
-            cfg_string += f"Module: {module}\n{cfg_history}"
-            ins_string += f"Module: {module}\n{cfg.display_instructions()}"
-        
-        formatted_prompt = prompt.format(
-            history_size=self.__cfg_deque_size,
-            cfgs=cfg_string,
-            instructions=ins_string,
-            sem_ir=self.sem_ir.pp(),
-            error=error
-        )
-        
-        if self.variable_values is not None:
-            formatted_prompt += "\nCurrent variable values at the specified bytecode offset:"
-            for module, var_map in self.variable_values.items():
-                formatted_prompt += f"\nModule {module}: Offset: {var_map[0]}, Variables: {str(var_map[1])}"
-        
-        response = self.model.generate(formatted_prompt)
-        lines = response.strip().splitlines()
-        response = "\n".join(line for line in lines if not line.strip().startswith("```"))
-            
-        return response
-    
-    def apply_fix_to_source(self, error, fixed_code):
-        try:
-            line_number = int(error.get("error_line_number", 0))
-            if line_number <= 0:
-                print(f"Error: Invalid line number received: {error.get('error_line_number')}")
-                return False
-        except (ValueError, TypeError):
-            print(f"Error: Could not parse line number from error data: {error.get('error_line_number')}")
-            return False
+        # 3. Extract the new text
+        # 4. Write the new content to the same file
+        with open(file_path + "_fixed", 'w') as f:
+            f.write(response)
 
-        if not fixed_code or not isinstance(fixed_code, str):
-             print("Error: Invalid or empty fixed_code received.")
-             return False
-
-        print(f"Target line number: {line_number}")
-        print(f"Proposed fix code:\n---\n{fixed_code}\n---")
-
-        source_file = self.source_file_path
-        if not source_file:
-            print("Error: Source file path is not set in ShellGhost instance.")
-            return False
-
-        if not os.path.exists(source_file):
-            print(f"Error: Source file path does not exist: {source_file}")
-            return False
-
-        print(f"Located source file: {source_file}")
-
-        try:
-            with open(source_file, 'r', encoding='utf-8') as f: 
-                lines = f.readlines()
-        except Exception as e:
-            print(f"Error reading source file '{source_file}': {e}")
-            return False
-
-        if line_number > len(lines):
-             print(f"Error: Line number {line_number} is out of bounds for file '{source_file}' (length: {len(lines)} lines).")
-             return False
-
-        try:
-            original_line_content = lines[line_number - 1]
-            indent = original_line_content[:len(original_line_content) - len(original_line_content.lstrip())]
-            print(f"Original line ({line_number}): {original_line_content.strip()}")
-            print(f"Detected indent: '{indent}' (length: {len(indent)})")
-
-            fixed_lines_indented = []
-            for line in fixed_code.strip().splitlines(): 
-                fixed_lines_indented.append(indent + line)
-
-            fixed_code_indented = "\n".join(fixed_lines_indented) + "\n"
-            print(f"Indented fix code:\n---\n{fixed_code_indented}---")
-
-        except IndexError:
-            print(f"Error: Could not access line {line_number} for indentation check (file length {len(lines)}).")
-            return False
-        except Exception as e:
-            print(f"Error during indentation handling: {e}")
-            return False
-
-
-        backup_file = source_file + ".bak"
-        try:
-            shutil.copy2(source_file, backup_file)
-            print(f"Created backup file: {backup_file}")
-        except Exception as e:
-            print(f"CRITICAL Error: Failed to create backup file '{backup_file}': {e}")
-            print("Aborting fix application to prevent data loss.")
-            return False 
-
-        lines[line_number - 1] = fixed_code_indented
-
-        try:
-            with open(source_file, 'w', encoding='utf-8') as f: 
-                f.writelines(lines)
-        except Exception as e:
-            print(f"Error writing fixed code back to '{source_file}': {e}")
-            print(f"Attempting to restore original file from backup '{backup_file}'...")
-            try:
-                shutil.copy2(backup_file, source_file)
-                print("Successfully restored original file from backup.")
-            except Exception as restore_e:
-                print(f"Failed to write fix AND failed to restore from backup: {restore_e}")
-            return False 
-
-
-        print(f"Successfully applied fix to '{source_file}' at line {line_number}.")
-        print("--- Code Fix Application Complete ---")
-        return True
-
-    
     def worker(self):
         self.cfg_cv.acquire()
         if self.cfgs is None:

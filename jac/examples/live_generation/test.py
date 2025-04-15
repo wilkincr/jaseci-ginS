@@ -7,7 +7,7 @@ from google.genai import types
 
 # Initialize Gemini Client
 client = genai.Client(
-    api_key="AIzaSyDCb9X9QEPg12gPPcfvAu7zudYnF9Qowu0"
+    api_key=os.getenv("GEMINI_API_KEY")
 )
 
 running = True
