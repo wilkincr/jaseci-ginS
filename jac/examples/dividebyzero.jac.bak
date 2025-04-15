@@ -1,0 +1,11 @@
+# Jaclang equivalent code
+
+with entry {
+    n = 5;
+
+    if (n / 0 == 5) {
+        std.out("True");  # Use std.out for printing in Jaclang
+    } else {
+        std.out("False");
+    }
+}

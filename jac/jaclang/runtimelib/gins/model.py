@@ -62,7 +62,7 @@ class Gemini(BaseModel):
             else:
                 import os
 
-                genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+                genai.configure(api_key="AIzaSyDCb9X9QEPg12gPPcfvAu7zudYnF9Qowu0")
             self.model = genai.GenerativeModel()
             import os
         except Exception as e:
