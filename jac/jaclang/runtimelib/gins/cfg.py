@@ -1,11 +1,7 @@
-"""CFG generation primitives for generating a CFG in jaclang passes.
-"""
-
 import marshal
 import dis
 from collections import defaultdict
 from typing import List, Optional, Iterator
-
 
 class BytecodeOp:
     def __init__(
@@ -25,11 +21,14 @@ class BytecodeOp:
         self.argrepr = argrepr
         self.is_jump_target = is_jump_target
         self.lineno = lineno
-        # default the offset
         self.__offset_size = 0
 
     def __repr__(self):
-        return f"Instr: offset={self.offset}, Lineno={self.lineno}, Opname={self.op}, arg={self.arg}, argval={self.argval}, argrepr={self.argrepr}, jump_t={self.is_jump_target}"
+        return (
+            f"Instr: offset={self.offset}, Lineno={self.lineno}, "
+            f"Opname={self.op}, arg={self.arg}, argval={self.argval}, "
+            f"argrepr={self.argrepr}, jump_t={self.is_jump_target}"
+        )
 
     def is_branch(self) -> bool:
         return self.op in {
@@ -44,7 +43,6 @@ class BytecodeOp:
 
     def is_conditional_branch(self) -> bool:
         return self.op in {
-            # TODO:These may not be used anymore?
             "JUMP_IF_TRUE_OR_POP",
             "JUMP_IF_FALSE_OR_POP",
             "POP_JUMP_IF_TRUE",
@@ -74,14 +72,14 @@ class BytecodeOp:
 
 
 class Block:
-    def __init__(self, id: int, instructions: List):
+    def __init__(self, id: int, instructions: List[BytecodeOp]):
         self.id: int = id
         self.instructions = instructions
         self.exec_count = 0
-        # Potentially use offset instead
         self.bytecode_offsets = set(
-            [instr.offset for instr in self.instructions if instr.offset != None]
+            [instr.offset for instr in self.instructions if instr.offset is not None]
         )
+        self.total_time = 0.0 # for bb runtime length
 
     def __repr__(self):
         instructions = "\n".join([str(instr) for instr in self.instructions])
@@ -90,7 +88,7 @@ class Block:
 
 class BlockMap:
     def __init__(self) -> None:
-        self.idx_to_block: Dict[int, Block] = {}
+        self.idx_to_block: dict[int, Block] = {}
 
     def add_block(self, idx, block):
         self.idx_to_block[idx] = block
@@ -112,39 +110,34 @@ def disassemble_bytecode(bytecode):
         line = getattr(instr, "lineno", None)
         if line is None:
             line = instr.starts_line
-        instructions.append(
-            BytecodeOp(
-                op=instr.opname,
-                arg=instr.arg,
-                offset=instr.offset,
-                argval=instr.argval,
-                argrepr=instr.argrepr,
-                is_jump_target=instr.is_jump_target,
-                lineno=line
-            )
+        b_op = BytecodeOp(
+            op=instr.opname,
+            arg=instr.arg,
+            offset=instr.offset,
+            argval=instr.argval,
+            argrepr=instr.argrepr,
+            is_jump_target=instr.is_jump_target,
+            lineno=line,
         )
-        # set offest size for calculating next instruction
-        # last instruction is default of 0, but shouldn't be needed
+        instructions.append(b_op)
+
+        # set offset_size for calculating next instruction offset
         if i != 0:
-            instruction = instructions[i - 1]
-            instruction.set_offset_size(instr.offset - instructions[i - 1].offset)
+            prev_instruction = instructions[i - 1]
+            prev_instruction.set_offset_size(instr.offset - prev_instruction.offset)
     return instructions
 
 
 def create_BBs(instructions: List[BytecodeOp]) -> BlockMap:
     block_starts = set([0])
     block_map = BlockMap()
-    num_instr = len(instructions)
-
-    # Create offset to index mapping
     offset_to_index = {instr.offset: idx for idx, instr in enumerate(instructions)}
     max_offset = instructions[-1].get_next_instruction_offset()
-    # print(f"Offset to Index Mapping: {offset_to_index}")
 
     def valid_offset(offset):
-        return offset >= 0 and offset <= max_offset
+        return 0 <= offset <= max_offset
 
-    # Identify all block starts
+    # Identify block starts
     for instr in instructions:
         if instr.is_branch() or instr.is_for_iter():
             next_instr_offset = instr.get_next_instruction_offset()
@@ -158,8 +151,7 @@ def create_BBs(instructions: List[BytecodeOp]) -> BlockMap:
             if valid_offset(target_offset):
                 block_starts.add(target_offset)
 
-    # identify the blocks, since we define BBs by jumps, a sorted list of those
-    # instructions give a range for instructions each BB will hold
+    # Build each block from start_offset -> next start offset
     block_starts_ordered = sorted(block_starts)
     for block_id, start_offset in enumerate(block_starts_ordered):
         end_offset = (
@@ -168,13 +160,11 @@ def create_BBs(instructions: List[BytecodeOp]) -> BlockMap:
             else instructions[-1].get_next_instruction_offset()
         )
         start_index = offset_to_index[start_offset]
-        end_index = offset_to_index[end_offset]
+        end_index = offset_to_index.get(end_offset, len(instructions) - 1)
 
-        # capture last instruction if the BB only has 1
         if start_index == end_index:
             end_index += 1
 
-        # Collect instructions for this block
         block_instrs = instructions[start_index:end_index]
         block_map.add_block(block_id, Block(block_id, block_instrs))
     return block_map
@@ -187,6 +177,10 @@ class CFG:
         self.edge_counts = {}
         self.block_map = block_map
 
+        # Optional: store memory usage by block
+        # dict of block_id -> list of memory usage stats
+        self.memory_usage = defaultdict(list)
+
     def add_node(self, node_id):
         self.nodes.add(node_id)
         if node_id not in self.edges:
@@ -196,8 +190,7 @@ class CFG:
         if from_node in self.edges:
             self.edges[from_node].append(to_node)
         else:
-            self.edges[from_node] = to_node
-
+            self.edges[from_node] = [to_node]
         self.edge_counts[(from_node, to_node)] = 0
 
     def display_instructions(self):
@@ -207,47 +200,52 @@ class CFG:
         return self.__repr__()
 
     def to_json(self):
-        obj = {'cfg_bbs':[]}
+        obj = {"cfg_bbs": []}
         for node in self.nodes:
             bb_obj = {
-                'bb_id': node, 
-                'freq':self.block_map.idx_to_block[node].exec_count,
-                'predicted_edges':[],
-                'actual_edges':[]
+                "bb_id": node,
+                "freq": self.block_map.idx_to_block[node].exec_count,
+                "predicted_edges": [],
+                "actual_edges": [],
             }
             if node in self.edges and self.edges[node]:
                 for succ in self.edges[node]:
-                    edge_placeholder = {'edge_to_bb_id':succ,'freq': 0}
-                    bb_obj['predicted_edges'].append(edge_placeholder)
-                    edge_obj = {'edge_to_bb_id':succ,'freq': self.edge_counts[(node, succ)]}
-                    bb_obj['actual_edges'].append(edge_obj)
-            obj['cfg_bbs'].append(bb_obj)
+                    edge_placeholder = {"edge_to_bb_id": succ, "freq": 0}
+                    bb_obj["predicted_edges"].append(edge_placeholder)
+                    edge_obj = {
+                        "edge_to_bb_id": succ,
+                        "freq": self.edge_counts[(node, succ)],
+                    }
+                    bb_obj["actual_edges"].append(edge_obj)
+            obj["cfg_bbs"].append(bb_obj)
         return obj
+
+    def record_memory_usage(self, block_id: int, usage_info: dict):
+        """Optionally store memory usage info for the given block."""
+        self.memory_usage[block_id].append(usage_info)
 
     def __repr__(self):
         result = []
         for node in self.nodes:
-            result.append(
-                f"Node bb{node} (freq={self.block_map.idx_to_block[node].exec_count}):"
-            )
+            freq = self.block_map.idx_to_block[node].exec_count
+            result.append(f"Node bb{node} (freq={freq}):")
             if node in self.edges and self.edges[node]:
                 for succ in self.edges[node]:
-                    result.append(f"(freq={self.edge_counts[(node, succ)]})-> bb{succ}")
+                    edge_freq = self.edge_counts[(node, succ)]
+                    result.append(f"(freq={edge_freq})-> bb{succ}")
         return "\n".join(result)
 
 
 def create_cfg(block_map: BlockMap) -> CFG:
     cfg = CFG(block_map)
-
     for block_id, block in block_map.idx_to_block.items():
         cfg.add_node(block_id)
-
         first_instr = block.instructions[0]
         last_instr = block.instructions[-1]
+
         if first_instr.is_for_iter():
-            # get the BB that starts with END_FOR
-            end_for_offset = first_instr.argval
-            end_for_block = find_block_by_offset(block_map, end_for_offset)
+            target_offset = first_instr.argval
+            end_for_block = find_block_by_offset(block_map, target_offset)
             if end_for_block is not None:
                 cfg.add_edge(block_id, end_for_block)
 
@@ -258,29 +256,23 @@ def create_cfg(block_map: BlockMap) -> CFG:
             if target_block is not None:
                 cfg.add_edge(block_id, target_block)
             if last_instr.is_conditional_branch():
-                fall_through_offset = block.instructions[
-                    -1
-                ].get_next_instruction_offset()
-                fall_through_block = find_block_by_offset(
-                    block_map, fall_through_offset
-                )
+                fall_through_offset = last_instr.get_next_instruction_offset()
+                fall_through_block = find_block_by_offset(block_map, fall_through_offset)
                 if fall_through_block is not None:
                     cfg.add_edge(block_id, fall_through_block)
-
-        # handle fall-through to the next block for non-control flow instructions
         else:
-            fall_through_offset = block.instructions[-1].get_next_instruction_offset()
+            # handle fall through
+            fall_through_offset = last_instr.get_next_instruction_offset()
             fall_through_block = find_block_by_offset(block_map, fall_through_offset)
             if (
                 fall_through_block is not None
                 and fall_through_offset != last_instr.offset
             ):
                 cfg.add_edge(block_id, fall_through_block)
-
     return cfg
 
 
-def find_block_by_offset(block_map: BlockMap, offset: int) -> int:
+def find_block_by_offset(block_map: BlockMap, offset: int) -> Optional[int]:
     for block_id, block in block_map.idx_to_block.items():
         if any(instr.offset == offset for instr in block.instructions):
             return block_id
@@ -301,25 +293,3 @@ def visualize_cfg(cfg: CFG):
     except ImportError:
         print("Graphviz not installed, can't visualize CFG")
         return None
-
-
-# can use as a test
-
-# if __name__ == "__main__":
-#     # Sample list of instructions for processing
-#     ##simple=
-#     # instructions = disassemble_bytecode(b'c\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x01\xf3*\x00\x00\x00\x97\x00d\x00d\x01l\x00m\x01Z\x01\x01\x00d\x00Z\x02d\x00Z\x03e\x03d\x00k\\\x00\x00r\x02d\x02Z\x02d\x03Z\x02y\x04)\x05\xe9\x00\x00\x00\x00)\x01\xda\x0bannotations\xe9\x01\x00\x00\x00\xe9\xff\xff\xff\xffN)\x04\xda\n__future__r\x02\x00\x00\x00\xda\x01a\xda\x01x\xa9\x00\xf3\x00\x00\x00\x00\xfaP/Users/jakobtherkelsen/Documents/jaseci-ginS/jac/examples/ginsScripts/simple.jac\xfa\x08<module>r\x0b\x00\x00\x00\x01\x00\x00\x00s%\x00\x00\x00\xf0\x03\x01\x01\x01\xf5\x02\x07\x02\x03\xd8\x05\x06\x801\xd8\x05\x06\x801\xd8\x06\x07\x881\x82f\xd8\x07\x08\x80Q\xe0\x05\x07\x811r\t\x00\x00\x00')
-#     # hot path
-#     instructions = disassemble_bytecode(
-#         b"c\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x04\x00\x00\x00\x00\x00\x00\x01\xf3\xa4\x00\x00\x00\x97\x00U\x00d\x00d\x01l\x00m\x01Z\x01\x01\x00d\x00Z\x02d\x02e\x03d\x03<\x00\x00\x00d\x04Z\x04d\x02e\x03d\x05<\x00\x00\x00e\x02e\x04z\x00\x00\x00Z\x05d\x02e\x03d\x06<\x00\x00\x00\x02\x00e\x06d\x04\xab\x01\x00\x00\x00\x00\x00\x00D\x00]\x1c\x00\x00Z\x07e\x02d\x07z\x06\x00\x00r\ne\x04e\x02z\x00\x00\x00Z\x04e\x02e\x04z\x00\x00\x00Z\x05d\x08e\x07z\x05\x00\x00e\x04e\x05z\x05\x00\x00z\x00\x00\x00Z\x02\x8c\x1e\x04\x00d\tZ\x05e\x05d\tk(\x00\x00r\x03d\x08Z\x05y\ny\n)\x0b\xe9\x00\x00\x00\x00)\x01\xda\x0bannotations\xda\x03int\xda\x01x\xe9\x03\x00\x00\x00\xda\x01y\xda\x01z\xe9\x02\x00\x00\x00\xe9\x04\x00\x00\x00\xe9\n\x00\x00\x00N)\x08\xda\n__future__r\x02\x00\x00\x00r\x04\x00\x00\x00\xda\x0f__annotations__r\x06\x00\x00\x00r\x07\x00\x00\x00\xda\x05range\xda\x01i\xa9\x00\xf3\x00\x00\x00\x00\xfaU/Users/jakobtherkelsen/Documents/jaseci-ginS/jac/examples/gins_scripts/simple_for.jac\xda\x08<module>r\x12\x00\x00\x00\x01\x00\x00\x00sy\x00\x00\x00\xf0\x03\x01\x01\x01\xf6\x02\x0f\x02\x03\xd8\r\x0e\x80Q\x80s\x83Z\xd8\r\x0e\x80Q\x80s\x83Z\xd8\r\x0e\x90\x11\x89U\x80Q\x80s\x83^\xd9\x0e\x13\x90A\x8eh\x88\x11\xd8\n\x0b\x88a\x8a%\xd8\r\x0e\x90\x11\x89U\x88\x11\xd8\r\x0e\x90\x11\x89U\x88\x11\xe0\x0b\x0c\x88q\x895\x901\x98\x01\x917\x89?\x81q\xf0\x0b\x00\x0f\x17\xf0\x0e\x00\n\x0c\x80Q\xd8\x08\t\x88R\x8a\x07\xd8\n\x0b\x81q\xf0\x03\x00\t\x10r\x10\x00\x00\x00"
-#     )
-#     BBs = create_BBs(instructions)
-#     print(BBs)
-
-#     cfg = create_cfg(BBs)
-#     print("\nControl Flow Graph (CFG):")
-#     print(cfg)
-
-#     # Visualize CFG
-#     dot = visualize_cfg(cfg)
-#     dot.render("cfg.gv", view=True)

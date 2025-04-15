@@ -27,6 +27,7 @@ class ShellGhost:
         self.cfg_cv = threading.Condition()
         self.tracker = CFGTracker()
         self.sem_ir = None
+        self.machine = None
 
         self.finished_exception_lock = threading.Lock()
         self.exception = None
@@ -58,6 +59,9 @@ class ShellGhost:
         self.cfgs = cfgs
         self.cfg_cv.notify()
         self.cfg_cv.release()
+
+    def set_machine(self, machine):
+        self.machine = machine
 
     def update_cfg_deque(self, cfg, module):
         self.deque_lock.acquire()
@@ -271,16 +275,42 @@ class ShellGhost:
         return response
 
     def annotate_source_code(self):
+        # Access static variable/type/function declarations
+        print("SEM IR", self.sem_ir.pp())
+
+        return
+
+
         source_code = read_source_code(self.source_file_path)
 
         bb_line_map = defaultdict(set)    # line_num -> [bb0]
-        bb_jumps = defaultdict(list)       # bb0 -> [bb1, bb2]
-        instr_line_map = defaultdict(list) 
+        bb_jumps = defaultdict(list)      # bb0 -> [bb1, bb2]
+        instr_line_map = defaultdict(list)
+        
+        # New maps for runtime and memory data
+        bb_runtime_map = {}   # bb_id -> (exec_count, total_time)
+        bb_memory_map = {}    # bb_id -> memory_usage
+        
+        # Gather memory usage data
+        mem_data = self.tracker.get_memory_usage()
+        if mem_data:
+            for module, usage_list in mem_data.items():
+                if module in self.cfgs:
+                    cfg = self.cfgs[module]
+                    for offset, line_no, top_stats in usage_list:
+                        for block_id, block in cfg.block_map.idx_to_block.items():
+                            if any(offset in block.bytecode_offsets for offset in block.bytecode_offsets):
+                                if block_id not in bb_memory_map:
+                                    bb_memory_map[block_id] = 0
+                                bb_memory_map[block_id] += sum(stat.size_diff for stat in top_stats)
 
         for module, cfg in self.cfgs.items():
             current_bb = None
-
             last_valid_lineno = None
+
+            # Collect runtime statistics for each block
+            for block_id, block in cfg.block_map.idx_to_block.items():
+                bb_runtime_map[block_id] = (block.exec_count, block.total_time)
 
             for line in cfg.display_instructions().splitlines():
                 if match := re.search(r'^(?:Node )?(bb\d+):', line):
@@ -317,8 +347,6 @@ class ShellGhost:
 
                     instr_line_map[lineno].append(summary)
 
-
-
             # Extract jumps between blocks
             current_bb = None
             for line in cfg.get_cfg_repr().splitlines():
@@ -336,10 +364,24 @@ class ShellGhost:
                 parts = []
                 for bb in bb_line_map[idx]:
                     jumps = bb_jumps.get(bb, [])
+                    bb_id = int(bb[2:])  # Extract numeric ID from "bb0", "bb1", etc.
+                    
+                    # Add runtime information
+                    runtime_info = ""
+                    if bb_id in bb_runtime_map:
+                        exec_count, total_time = bb_runtime_map[bb_id]
+                        runtime_info = f"[exec={exec_count}, time={total_time:.4f}s]"
+                    
+                    # Add memory information
+                    memory_info = ""
+                    if bb_id in bb_memory_map:
+                        memory_usage = bb_memory_map[bb_id]
+                        memory_info = f"[mem={memory_usage} bytes]"
+                    
                     if jumps:
-                        parts.append(f"{bb} → {', '.join(jumps)}")
+                        parts.append(f"{bb} {runtime_info} {memory_info} → {', '.join(jumps)}")
                     else:
-                        parts.append(f"{bb}")
+                        parts.append(f"{bb} {runtime_info} {memory_info}")
                 bb_comment = "  # " + " | ".join(parts)
 
             full_line = line + bb_comment
@@ -352,16 +394,17 @@ class ShellGhost:
 
         annotated_code = "\n".join(annotated_lines)
         print(annotated_code)
-        return annotated_code
-
+        
         # Save to file
         output_path = self.source_file_path + ".annotated.jac"
         with open(output_path, "w") as f:
             f.write(annotated_code)
-        print(f"\n✅ Annotated source written to: {output_path}")
-
+        print(f"\n Annotated source written to: {output_path}")
+        
+        return annotated_code
+    
     def prompt_annotated_code(self, annotated_code):
-        prompt = """
+        prompt = f"""
         I have a JacLang program annotated with control flow and bytecode information.
         Each line may include:
         - Basic block transitions (e.g., `# bb0 → bb1, bb2`)
@@ -380,9 +423,34 @@ class ShellGhost:
         6. If possible: point out which **line numbers** or **blocks** the issue is in
 
         Here is the annotated code:
-        """ + annotated_code
-        response = self.model.generate_structured(prompt)
-        print(response)
+        {annotated_code}"""
+
+        error_response = self.model.generate_structured(prompt)
+        # print(error_response)
+        for error in error_response['error_list']:
+            prompt = f"""
+            I have a JacLang program annotated with control flow and bytecode information.
+            Each line may include:
+            - Basic block transitions (e.g., `# bb0 → bb1, bb2`)
+            - Bytecode instructions generated from that line (e.g., `#   [LOAD_NAME n, BINARY_OP /]`)
+            Here is the annotated code:
+            {annotated_code}
+            That has the following errors:
+            {error}
+            Please provide ONLY actual executable code that fixes this error.
+            The code should handle the error case properly following these requirements:
+            1. Don't change the overall behavior of the program
+            2. Add appropriate safety checks to prevent the error
+            3. Return only the code that needs to be injected, no explanations
+            
+            Format your response as a Python code block starting with ```python and ending with ```
+
+            """
+            response = self.model.generate(prompt)
+            lines = response.strip().splitlines()
+            response = "\n".join(line for line in lines if not line.strip().startswith("```"))
+            print(prompt)
+            print(response)
         return response
     
 
@@ -656,7 +724,7 @@ class ShellGhost:
         # response = self.prompt_for_runtime()
         # print(response["behavior_description"])
         # print(response["error_list"])
-        self.prompt_annotated_code(self.annotate_source_code());
+        self.prompt_annotated_code(self.annotate_source_code())
         
         # if len(response['error_list']) > 0:
         #         fixes_applied = False

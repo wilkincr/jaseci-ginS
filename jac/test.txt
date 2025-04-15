@@ -642,3 +642,233 @@
     8 |     } else {
   at <module> /home/afardeen/jaseci-ginS/jac/examples/test.jac:6
 2025-04-14 18:30:46 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 1, 'freq': 0, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}]}, {'bb_id': 2, 'freq': 0, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-15 09:38:19 - division by zero
+2025-04-15 09:38:19 - Error: division by zero
+    4 |     n = 5;
+    5 | 
+    6 |     if (n / 0 == 5) {
+      |         ^^^^^
+    7 |         std.out("True");  # Use std.out for printing in Jaclang
+    8 |     } else {
+  at <module> /root/jaseci-ginS/jac/examples/test.jac:6
+2025-04-15 09:38:22 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 1, 'freq': 0, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}]}, {'bb_id': 2, 'freq': 0, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-15 09:38:44 - division by zero
+2025-04-15 09:38:44 - Error: division by zero
+    4 |     n = 5;
+    5 | 
+    6 |     if (n / 0 == 5) {
+      |         ^^^^^
+    7 |         std.out("True");  # Use std.out for printing in Jaclang
+    8 |     } else {
+  at <module> /root/jaseci-ginS/jac/examples/test.jac:6
+2025-04-15 09:38:47 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 1, 'freq': 0, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}]}, {'bb_id': 2, 'freq': 0, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-15 09:40:13 - division by zero
+2025-04-15 09:40:13 - Error: division by zero
+    4 |     n = 5;
+    5 | 
+    6 |     if (n / 0 == 5) {
+      |         ^^^^^
+    7 |         std.out("True");  # Use std.out for printing in Jaclang
+    8 |     } else {
+  at <module> /root/jaseci-ginS/jac/examples/test.jac:6
+2025-04-15 09:40:16 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 1, 'freq': 0, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}]}, {'bb_id': 2, 'freq': 0, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-15 09:41:11 - division by zero
+2025-04-15 09:41:11 - Error: division by zero
+    4 |     n = 5;
+    5 | 
+    6 |     if (n / 0 == 5) {
+      |         ^^^^^
+    7 |         std.out("True");  # Use std.out for printing in Jaclang
+    8 |     } else {
+  at <module> /root/jaseci-ginS/jac/examples/test.jac:6
+2025-04-15 09:41:14 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 1, 'freq': 0, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}]}, {'bb_id': 2, 'freq': 0, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-15 09:48:58 - division by zero
+2025-04-15 09:48:58 - Error: division by zero
+    4 |     n = 5;
+    5 | 
+    6 |     if (n / 0 == 5) {
+      |         ^^^^^
+    7 |         std.out("True");  # Use std.out for printing in Jaclang
+    8 |     } else {
+  at <module> /root/jaseci-ginS/jac/examples/test.jac:6
+2025-04-15 09:49:01 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 1, 'freq': 0, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}]}, {'bb_id': 2, 'freq': 0, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-15 09:49:29 - division by zero
+2025-04-15 09:49:29 - Error: division by zero
+    4 |     n = 5;
+    5 | 
+    6 |     if (n / 0 == 5) {
+      |         ^^^^^
+    7 |         std.out("True");  # Use std.out for printing in Jaclang
+    8 |     } else {
+  at <module> /root/jaseci-ginS/jac/examples/test.jac:6
+2025-04-15 09:49:32 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 1, 'freq': 0, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}]}, {'bb_id': 2, 'freq': 0, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-15 09:50:05 - division by zero
+2025-04-15 09:50:05 - Error: division by zero
+    4 |     n = 5;
+    5 | 
+    6 |     if (n / 0 == 5) {
+      |         ^^^^^
+    7 |         std.out("True");  # Use std.out for printing in Jaclang
+    8 |     } else {
+  at <module> /root/jaseci-ginS/jac/examples/test.jac:6
+2025-04-15 09:50:08 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 1, 'freq': 0, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}]}, {'bb_id': 2, 'freq': 0, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-15 09:50:55 - division by zero
+2025-04-15 09:50:55 - Error: division by zero
+    4 |     n = 5;
+    5 | 
+    6 |     if (n / 0 == 5) {
+      |         ^^^^^
+    7 |         std.out("True");  # Use std.out for printing in Jaclang
+    8 |     } else {
+  at <module> /root/jaseci-ginS/jac/examples/test.jac:6
+2025-04-15 09:50:58 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 1, 'freq': 0, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}]}, {'bb_id': 2, 'freq': 0, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-15 09:51:31 - division by zero
+2025-04-15 09:51:31 - Error: division by zero
+    4 |     n = 5;
+    5 | 
+    6 |     if (n / 0 == 5) {
+      |         ^^^^^
+    7 |         std.out("True");  # Use std.out for printing in Jaclang
+    8 |     } else {
+  at <module> /root/jaseci-ginS/jac/examples/test.jac:6
+2025-04-15 09:51:34 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 1, 'freq': 0, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}]}, {'bb_id': 2, 'freq': 0, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-15 09:51:53 - division by zero
+2025-04-15 09:51:53 - Error: division by zero
+    4 |     n = 5;
+    5 | 
+    6 |     if (n / 0 == 5) {
+      |         ^^^^^
+    7 |         std.out("True");  # Use std.out for printing in Jaclang
+    8 |     } else {
+  at <module> /root/jaseci-ginS/jac/examples/test.jac:6
+2025-04-15 09:51:56 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 1, 'freq': 0, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}]}, {'bb_id': 2, 'freq': 0, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-15 09:52:59 - division by zero
+2025-04-15 09:52:59 - Error: division by zero
+    4 |     n = 5;
+    5 | 
+    6 |     if (n / 0 == 5) {
+      |         ^^^^^
+    7 |         std.out("True");  # Use std.out for printing in Jaclang
+    8 |     } else {
+  at <module> /root/jaseci-ginS/jac/examples/test.jac:6
+2025-04-15 09:53:02 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 1, 'freq': 0, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}]}, {'bb_id': 2, 'freq': 0, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-15 09:53:49 - division by zero
+2025-04-15 09:53:49 - Error: division by zero
+    4 |     n = 5;
+    5 | 
+    6 |     if (n / 0 == 5) {
+      |         ^^^^^
+    7 |         std.out("True");  # Use std.out for printing in Jaclang
+    8 |     } else {
+  at <module> /root/jaseci-ginS/jac/examples/test.jac:6
+2025-04-15 09:53:52 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 1, 'freq': 0, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}]}, {'bb_id': 2, 'freq': 0, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-15 09:55:57 - division by zero
+2025-04-15 09:55:57 - Error: division by zero
+    4 |     n = 5;
+    5 | 
+    6 |     if (n / 0 == 5) {
+      |         ^^^^^
+    7 |         std.out("True");  # Use std.out for printing in Jaclang
+    8 |     } else {
+  at <module> /root/jaseci-ginS/jac/examples/test.jac:6
+2025-04-15 09:56:00 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 1, 'freq': 0, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}]}, {'bb_id': 2, 'freq': 0, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-15 09:56:20 - division by zero
+2025-04-15 09:56:20 - Error: division by zero
+    4 |     n = 5;
+    5 | 
+    6 |     if (n / 0 == 5) {
+      |         ^^^^^
+    7 |         std.out("True");  # Use std.out for printing in Jaclang
+    8 |     } else {
+  at <module> /root/jaseci-ginS/jac/examples/test.jac:6
+2025-04-15 09:56:23 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 1, 'freq': 0, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}]}, {'bb_id': 2, 'freq': 0, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-15 10:07:09 - division by zero
+2025-04-15 10:07:09 - Error: division by zero
+    4 |     n = 5;
+    5 | 
+    6 |     if (n / 0 == 5) {
+      |         ^^^^^
+    7 |         std.out("True");  # Use std.out for printing in Jaclang
+    8 |     } else {
+  at <module> /root/jaseci-ginS/jac/examples/test.jac:6
+2025-04-15 10:07:12 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 1, 'freq': 0, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}]}, {'bb_id': 2, 'freq': 0, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-15 10:07:43 - division by zero
+2025-04-15 10:07:43 - Error: division by zero
+    4 |     n = 5;
+    5 | 
+    6 |     if (n / 0 == 5) {
+      |         ^^^^^
+    7 |         std.out("True");  # Use std.out for printing in Jaclang
+    8 |     } else {
+  at <module> /root/jaseci-ginS/jac/examples/test.jac:6
+2025-04-15 10:07:46 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 1, 'freq': 0, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}]}, {'bb_id': 2, 'freq': 0, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-15 10:09:27 - division by zero
+2025-04-15 10:09:27 - Error: division by zero
+    4 |     n = 5;
+    5 | 
+    6 |     if (n / 0 == 5) {
+      |         ^^^^^
+    7 |         std.out("True");  # Use std.out for printing in Jaclang
+    8 |     } else {
+  at <module> /root/jaseci-ginS/jac/examples/test.jac:6
+2025-04-15 10:09:30 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 1, 'freq': 0, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}]}, {'bb_id': 2, 'freq': 0, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-15 10:10:51 - division by zero
+2025-04-15 10:10:51 - Error: division by zero
+    4 |     n = 5;
+    5 | 
+    6 |     if (n / 0 == 5) {
+      |         ^^^^^
+    7 |         std.out("True");  # Use std.out for printing in Jaclang
+    8 |     } else {
+  at <module> /root/jaseci-ginS/jac/examples/test.jac:6
+2025-04-15 10:10:54 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 1, 'freq': 0, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}]}, {'bb_id': 2, 'freq': 0, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-15 10:11:23 - division by zero
+2025-04-15 10:11:23 - Error: division by zero
+    4 |     n = 5;
+    5 | 
+    6 |     if (n / 0 == 5) {
+      |         ^^^^^
+    7 |         std.out("True");  # Use std.out for printing in Jaclang
+    8 |     } else {
+  at <module> /root/jaseci-ginS/jac/examples/test.jac:6
+2025-04-15 10:11:26 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 1, 'freq': 0, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}]}, {'bb_id': 2, 'freq': 0, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-15 10:11:43 - division by zero
+2025-04-15 10:11:43 - Error: division by zero
+    4 |     n = 5;
+    5 | 
+    6 |     if (n / 0 == 5) {
+      |         ^^^^^
+    7 |         std.out("True");  # Use std.out for printing in Jaclang
+    8 |     } else {
+  at <module> /root/jaseci-ginS/jac/examples/test.jac:6
+2025-04-15 10:11:46 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 1, 'freq': 0, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}]}, {'bb_id': 2, 'freq': 0, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-15 10:12:12 - division by zero
+2025-04-15 10:12:12 - Error: division by zero
+    4 |     n = 5;
+    5 | 
+    6 |     if (n / 0 == 5) {
+      |         ^^^^^
+    7 |         std.out("True");  # Use std.out for printing in Jaclang
+    8 |     } else {
+  at <module> /root/jaseci-ginS/jac/examples/test.jac:6
+2025-04-15 10:12:15 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 1, 'freq': 0, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}]}, {'bb_id': 2, 'freq': 0, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-15 10:12:37 - division by zero
+2025-04-15 10:12:37 - Error: division by zero
+    4 |     n = 5;
+    5 | 
+    6 |     if (n / 0 == 5) {
+      |         ^^^^^
+    7 |         std.out("True");  # Use std.out for printing in Jaclang
+    8 |     } else {
+  at <module> /root/jaseci-ginS/jac/examples/test.jac:6
+2025-04-15 10:12:40 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 1, 'freq': 0, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}]}, {'bb_id': 2, 'freq': 0, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-15 10:12:52 - division by zero
+2025-04-15 10:12:52 - Error: division by zero
+    4 |     n = 5;
+    5 | 
+    6 |     if (n / 0 == 5) {
+      |         ^^^^^
+    7 |         std.out("True");  # Use std.out for printing in Jaclang
+    8 |     } else {
+  at <module> /root/jaseci-ginS/jac/examples/test.jac:6
+2025-04-15 10:12:55 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 1, 'freq': 0, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 0}]}, {'bb_id': 2, 'freq': 0, 'predicted_edges': [], 'actual_edges': []}]}
