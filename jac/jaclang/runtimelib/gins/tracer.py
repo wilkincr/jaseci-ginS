@@ -7,7 +7,7 @@ import os
 import traceback
 import linecache
 import dis
-from collections import deque
+from collections import deque, defaultdict
 import inspect
 import warnings
 import ast
@@ -46,7 +46,14 @@ class CFGTracker:
         self.inst_lock = threading.Lock()
 
         self.curr_variables_lock = threading.Lock()
-        self.curr_variables = {}
+        self.curr_line = -1
+        self.curr_variables = defaultdict(
+            lambda: defaultdict(
+                lambda: defaultdict(
+                    lambda: defaultdict(int)
+                )
+            )
+        )    
 
         # tracking inputs
         self.inputs = []
@@ -109,6 +116,20 @@ class CFGTracker:
                 break
             current_line = line
         return current_line
+    
+    def get_runtime_info(self, top_k=5):
+        return self.curr_variables
+        # keys are (module, line_no, var_name, value), value is frequency
+        # ex. (example, 12, x, 45), value is how many times x = 45
+
+        for mod, lines in self.curr_variables.items():
+            for line, vars in lines.items():
+                for var, values in vars.items():
+                    sorted_vals = sorted(values.items(), key=lambda x: -x[1])
+                    top_vals, freqs = sorted_vals[:5]
+                    print(f"{mod}:{line} - {var} = {top_val} (seen {freq} times)")
+        
+        return runtime_info
 
     def trace_callback(
         self, frame: types.FrameType, event: str, arg: any
@@ -139,15 +160,23 @@ class CFGTracker:
             # 2) Track variables
             if "__annotations__" in frame.f_locals:
                 with self.curr_variables_lock:
-                    variable_dict = {}
-                    for var_name in frame.f_locals["__annotations__"]:
+                    
+                    lineno = frame.f_lineno
+                    if lineno != self.curr_line:
+                        print(lineno)
+                        for var_name in frame.f_locals["__annotations__"]:
                         # capture input if changed
-                        if var_name == "input_val":
-                            if not self.inputs or frame.f_locals[var_name] != self.inputs[-1]:
-                                self.inputs.append(frame.f_locals[var_name])
-                        variable_dict[var_name] = frame.f_locals[var_name]
-                    self.curr_variables[module] = (frame.f_lasti, variable_dict)
-
+                            if var_name == "input_val":
+                                if not self.inputs or frame.f_locals[var_name] != self.inputs[-1]:
+                                    self.inputs.append(frame.f_locals[var_name])
+                        # keys are (module, line_no, var_name), value is frequency
+                            print("var_name", frame.f_locals[var_name])
+                            variable_value = frame.f_locals[var_name]
+                            self.curr_variables[module][lineno][var_name][variable_value] += 1
+                            # print(self.curr_variables[module][lineno][var_name])
+                            self.curr_line = lineno
+            
+            
             # 3) [NEW] Memory usage with tracemalloc
             #    - Here we do it for every opcode, but for performance you might do every Nth
             self._opcode_count += 1

@@ -352,6 +352,7 @@ class JacImporter(Importer):
 
                 if JacMachine.get().gin:
                     try:
+                        bytecode_level = False
                         with sys_path_context(spec.caller_dir):
                             JacMachine.get().gin.tracker.start_tracking()
                             exec(codeobj, module.__dict__)

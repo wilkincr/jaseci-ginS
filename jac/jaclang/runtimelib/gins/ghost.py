@@ -83,6 +83,27 @@ class ShellGhost:
         self.finished = True
         self.finished_exception_lock.release()
 
+    
+    def basic_block_agg(self, curr_variable_values):
+        agg = defaultdict(                                   # module
+                lambda: defaultdict(                         # basic‑block id
+                    lambda: defaultdict(                     # variable
+                        lambda: defaultdict(int)             # value → count
+                    )   
+                )
+            )
+
+        for mod, lines in curr_variable_values.items():             # module
+            bbmap = self.cfgs[mod].block_map                        # convenience
+            for line_no, vars_at_line in lines.items():             # source line
+                # grab **all** blocks that contain that line
+                bb_id = bbmap.block_for_line(line_no)
+                for var, value_counts in vars_at_line.items():
+                    for value, cnt in value_counts.items():
+                        agg[mod][bb_id][var][value] += cnt
+
+        return agg
+
     def annotate_source_code(self):        
         source_code = read_source_code(self.source_file_path)
 
@@ -436,18 +457,28 @@ class ShellGhost:
 
                     print(f"Exception found: {e}")
                     
-                    annotated_code = self.annotate_source_code()
+                    # annotated_code = self.annotate_source_code()
                     
-                    fix_code = self.prompt_annotated_code(annotated_code)
-                    if fix_code:
-                        self.apply_fix_to_source(fix_code["line_number"], fix_code["fix_code"])
-                        continue
-                    else:
-                        self.set_finished(e)
-                        print(e)
-                        break
+                    # fix_code = self.prompt_annotated_code(annotated_code)
+                    # if fix_code:
+                    #     self.apply_fix_to_source(fix_code["line_number"], fix_code["fix_code"])
+                    #     continue
+                    self.set_finished(e)
+                    print(e)
+                    break
 
-            self.variable_values = self.tracker.get_variable_values()
+            curr_variable_values = self.tracker.get_variable_values()
+            basic_block_agg = self.basic_block_agg(curr_variable_values)
+            TOP_N = 5
+            for mod, bb_dict in basic_block_agg.items():
+                for bb_id, var_dict in bb_dict.items():
+                    for var, val_counts in var_dict.items():
+                        top_vals = sorted(val_counts.items(),
+                                        key=lambda x: -x[1])[:TOP_N]
+                        for val, freq in top_vals:
+                            print(f"{mod}:bb{bb_id} - {var} = {val}  (seen {freq}×)")
+
+
             # print("Updating cfg deque")
             self.update_cfg_deque(cfg.get_cfg_repr(), module)
             self.logger.info(cfg.to_json())
@@ -466,12 +497,14 @@ class ShellGhost:
 
         print("\nUpdating cfgs at the end")
         update_cfg()
+        for cfg in self.cfgs.values():
+            print(cfg.get_cfg_repr())
         #Multiple fixes needed
         # self.apply_multiple_fix_up()
 
         # One fix only 
-        annotated_code = self.annotate_source_code()
-        fix_code = self.prompt_annotated_code(annotated_code)
+        # annotated_code = self.annotate_source_code()
+        # fix_code = self.prompt_annotated_code(annotated_code)
         # if fix_code:
         #     self.apply_fix_to_source(start_line=fix_code["start_line"], end_line=fix_code["end_line"], fix_code=fix_code["fix_code"])
 

@@ -89,9 +89,18 @@ class Block:
 class BlockMap:
     def __init__(self) -> None:
         self.idx_to_block: dict[int, Block] = {}
+        self.line_to_blocks: defaultdict[int, int] = defaultdict(int)
 
     def add_block(self, idx, block):
         self.idx_to_block[idx] = block
+        for instr in block.instructions:
+            if instr.lineno is not None:
+                self.line_to_blocks[instr.lineno] = idx
+
+    def block_for_line(self, lineno: int) -> Optional[int]:
+        """Return the first block that contains `lineno` (or None)."""
+        block = self.line_to_blocks[lineno]
+        return block if block else None
 
     def __repr__(self) -> str:
         result = []
