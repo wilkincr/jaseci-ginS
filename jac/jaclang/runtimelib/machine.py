@@ -84,6 +84,8 @@ class JacMachine:
                 self.gin.start_ghost()
             return bytecode
         return None
+    
+
 
     def get_sem_ir(self, mod_sem_ir: SemRegistry | None) -> None:
         """Update semtable on the attached JacProgram."""

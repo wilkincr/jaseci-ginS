@@ -19,7 +19,7 @@ class Cfg(TypedDict):
 
 
 
-class Error(enum.Enum):
+class Improvement(enum.Enum):
     OK = "Ok"
     ZeroDivisionError = "ZeroDivisionError"
     NameError = "NameError"
@@ -27,19 +27,26 @@ class Error(enum.Enum):
     ValueError = "ValueError"
     IndexError = "IndexError"
     SyntaxError = "SyntaxError"
+    PerformanceImprovement = "PerformanceImprovement"
+    SafetyImprovement = "SafetyImprovement"
 
-class ErrorResponse(TypedDict):
-    type_of_error: Error
-    error_line_number: str
-
-
+class Improvements(TypedDict):
+    type_of_improvement: str
+    improvement_desc: str
+    start_line: int           
+    end_line: int
+    
 class Response(TypedDict):
-    behavior_description : str
-    error_list: List[ErrorResponse]
+    improvement_list: List[Improvements]
+
+class FixSuggestion(TypedDict):
+    fix_code: str             
+    start_line: int           
+    end_line: int
 """Generative AI model integration for GINS
 """
 class BaseModel:
-    def __init__(self, model_name: str = "gemini-1.5-pro", **kwargs):
+    def __init__(self, model_name: str = "gemini-2.0-flash", **kwargs):
         self.model_name = model_name
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -83,5 +90,15 @@ class Gemini(BaseModel):
           generation_config=genai.GenerationConfig(
           response_mime_type='application/json',
           response_schema=Response),)
+        response_dict = json.loads(response.text)
+        return response_dict
+
+    def generate_fixed_code(self, prompt: str):
+        import google.generativeai as genai
+        response = self.model.generate_content(
+          prompt,
+          generation_config=genai.GenerationConfig(
+          response_mime_type='application/json',
+          response_schema=FixSuggestion),)
         response_dict = json.loads(response.text)
         return response_dict

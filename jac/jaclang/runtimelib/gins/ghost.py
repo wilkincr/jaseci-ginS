@@ -9,11 +9,11 @@ import logging
 import types
 import shutil 
 import re
+import json
 from collections import defaultdict
 from jaclang.runtimelib.gins.model import Gemini
 from jaclang.runtimelib.gins.tracer import CFGTracker, CfgDeque
 from pydantic import BaseModel
-
 
 # Helper class to maintain a fixed deque size
 def read_source_code(file_path: str) -> str:
@@ -83,215 +83,16 @@ class ShellGhost:
         self.finished = True
         self.finished_exception_lock.release()
 
-    def prompt_direct(self):
-      script = """
-      import:py from math { exp }
-      import:py from time { sleep }
-      # Data structure representing system configuration
-      glob system_config: Dict[str, Union[int, str, float]] = {
-          'base_load': 1000,    # Base power load in watts
-          'min_duration': 10,   # Minimum valid duration in minutes
-          'mode': 'active',
-          'time_step': 0,       # Track progression of simulation
-          'reference_delta': 200 # Reference power delta for normalization
-      };
-
-      # Function to generate declining power readings
-      with entry {
-          # Create gradually converging power readings
-          base: float = system_config['base_load'];
-          power_readings: list[float] = [];
-          time_periods: list[int] = [];
-          reference_power: float = base + 200;# Reference power for normalization
-
-          # Generate 200 readings that gradually approach base_load
-          for i in range(200) {
-              # Power gradually approaches base_load (1000W)
-              delta: float = 200.0 * exp(-0.5 * i);# Slower decay for better visualization
-              current_power: float = base + delta;
-              power_readings.append(current_power);
-
-              # Time periods increase linearly
-              time_periods.append(15 + i * 2);
-          }
-
-          # Initialize results storage
-
-          efficiency_metrics: list = [];
-          total_operational_time: int = 0;
-
-          # Process each power reading with different execution paths
-          for (idx, current_power) in enumerate(power_readings) {
-              if system_config['mode'] != 'active' {
-                  continue;
-              }
-
-              duration: int = time_periods[idx];
-              if duration < system_config['min_duration'] {
-                  continue;
-              }
-
-              # Track simulation progression
-
-              system_config['time_step'] += 1;
-
-              power_delta: float = current_power - system_config['base_load'];
-
-              # Introduce different execution paths based on time_step
-              if system_config['time_step'] > 50 {
-                  diminishing_reference: float = power_delta * 2;  # Reference point approaches zero with power_delta
-                  power_utilization: float = power_delta / diminishing_reference;  # Approaches 0.5, then unstable
-              } else {
-                  # Original calculation path for first 10 steps
-                  power_utilization: float = power_delta / system_config['reference_delta'];
-              }
-              period_efficiency: float = power_utilization * (duration / max(time_periods)) * 100;
-
-              efficiency_metrics.append(period_efficiency);
-              total_operational_time += duration;
-
-              # Print current state
-              print(
-                  f"Step {system_config['time_step']}: Power={current_power}W, " + f"Delta from base={current_power - system_config['base_load']}W"
-              );
-          }
-
-          # Calculate final metrics if no error occurred
-
-          average_efficiency: float = sum(efficiency_metrics) / len(efficiency_metrics) if efficiency_metrics else 0;
-          operational_hours: float = total_operational_time / 60;
-          print(
-              f"System Analysis Complete - Efficiency: {average_efficiency}%"
-          );
-
-      }
-
-      """
-      prompt = f"""
-      I have the following script:
-      {script}
-
-      Can you identity bottlneck optimizations or where the code can error out?"
-      Reason about the program using the provided information, reason about the program itself and what improvements could be made.
-      """
-
-      response = self.model.generate(prompt)
-
-      print("\nGin Analysis(With static info):\n", response)
-      
-    def prompt_llm(self, verbose: bool = False):
-        prompt = """I have a program.
-        {cfgs},
-        Instructions per basic block:
-        {instructions}
-        """
-        # Semantic and Type information from source code:
-        # {sem_ir}"""
-
-        cfg_string = ""
-        ins_string = ""
-        for module, cfg in self.cfgs.items():
-            cfg_string += f"Module: {module}\n{cfg}"
-            ins_string += f"Module: {module}\n{cfg.display_instructions()}"
-
-        prompt = prompt.format(
-            cfgs=cfg_string, instructions=ins_string, sem_ir=self.sem_ir.pp()
-        )
-
-        if self.variable_values != None:
-            prompt += "\nCurrent variable values at the specified bytecode offset:"
-
-            for module, var_map in self.variable_values.items():
-                prompt += f"\nModule {module}: Offset: {var_map[0]}, Variables: {str(var_map[1])}"
-
-        self.finished_exception_lock.acquire()
-
-        if self.exception:
-            prompt += f"\nException: {self.exception}"
-
-        self.finished_exception_lock.release()
-
-        # prompt += "\nCan you identity bottlneck optimizations or where the code can error out?"
-        # prompt += "\n(Reason about the program using cfg, semantic and type information. Instead of saying what BB could be improved, reason about the program itself and what improvements could be made.)"
-        # prompt += "\n If variable values are available, reason about at what point did a variable cause an issue"
-        prompt += "\n Please use the following information fill in predicted_edges[freq] for each BB edge with something completely random"
-        if verbose:
-            print(prompt)
-
-        response = self.model.generate(prompt)
-
-        print("\nGin Analysis:\n", response)
-        return response
-
-    def prompt_llm_with_history(self, verbose: bool = False):
-        prompt = """I have a program.
-        Up to last {history_size} CFGs recorded:
-        {cfgs},
-        Instructions per basic block:
-        {instructions}
-        Semantic and Type information from source code:
-        {sem_ir}"""
-
-        cfg_string = ""
-        ins_string = ""
-        for module, cfg in self.cfgs.items():
-            cfg_history = "None at this time"
-            if module in self.__cfg_deque_dict:
-              cfg_history = self.__cfg_deque_dict[module].get_cfg_repr()
-            cfg_string += f"Module: {module}\n{cfg_history}"
-            ins_string += f"Module: {module}\n{cfg.display_instructions()}"
-
-        prompt = prompt.format(
-            history_size=self.__cfg_deque_size,
-            cfgs=cfg_string, 
-            instructions=ins_string, 
-            sem_ir=self.sem_ir.pp()
-        )
-
-        if self.variable_values != None:
-            prompt += "\nCurrent variable values at the specified bytecode offset:"
-
-            for module, var_map in self.variable_values.items():
-                prompt += f"\nModule {module}: Offset: {var_map[0]}, Variables: {str(var_map[1])}"
-
-        self.finished_exception_lock.acquire()
-
-        if self.exception:
-            prompt += f"\nException: {self.exception}"
-
-        self.finished_exception_lock.release()
-
-        prompt += "\nCan you identity bottlneck optimizations or where the code can error out?"
-        prompt += "\n(Reason about the program using cfg history, semantic and type information. Users will not have access to BB information, so try to reason about the logic and frequencies of blocks instead.)"
-        prompt += "\n Additionally, look for any cases where the hot path of the code appears to change at some point in the program"
-        prompt += "\n If variable values are available, can you provide tracing information to help find the root cause of any issues?"
-
-        if verbose:
-            print(prompt)
-
-        response = self.model.generate(prompt)
-
-
-        return response
-
-    def annotate_source_code(self):
-        # Access static variable/type/function declarations
-        print("SEM IR", self.sem_ir.pp())
-
-        return
-
-
+    def annotate_source_code(self):        
         source_code = read_source_code(self.source_file_path)
 
         bb_line_map = defaultdict(set)    # line_num -> [bb0]
         bb_jumps = defaultdict(list)      # bb0 -> [bb1, bb2]
         instr_line_map = defaultdict(list)
         
-        # New maps for runtime and memory data
         bb_runtime_map = {}   # bb_id -> (exec_count, total_time)
         bb_memory_map = {}    # bb_id -> memory_usage
         
-        # Gather memory usage data
         mem_data = self.tracker.get_memory_usage()
         if mem_data:
             for module, usage_list in mem_data.items():
@@ -308,10 +109,8 @@ class ShellGhost:
             current_bb = None
             last_valid_lineno = None
 
-            # Collect runtime statistics for each block
             for block_id, block in cfg.block_map.idx_to_block.items():
                 bb_runtime_map[block_id] = (block.exec_count, block.total_time)
-
             for line in cfg.display_instructions().splitlines():
                 if match := re.search(r'^(?:Node )?(bb\d+):', line):
                     current_bb = match.group(1)
@@ -347,7 +146,6 @@ class ShellGhost:
 
                     instr_line_map[lineno].append(summary)
 
-            # Extract jumps between blocks
             current_bb = None
             for line in cfg.get_cfg_repr().splitlines():
                 if match := re.search(r'Node (bb\d+)', line):
@@ -355,42 +153,39 @@ class ShellGhost:
                 elif match := re.findall(r'-> (bb\d+)', line):
                     bb_jumps[current_bb].extend(match)
 
-        # Output annotated source
         annotated_lines = []
         for idx, line in enumerate(source_code.splitlines(), start=1):
-            # 1. Append original line + BB comment
             bb_comment = ""
             if idx in bb_line_map:
                 parts = []
                 for bb in bb_line_map[idx]:
                     jumps = bb_jumps.get(bb, [])
-                    bb_id = int(bb[2:])  # Extract numeric ID from "bb0", "bb1", etc.
+                    bb_id = int(bb[2:])
                     
-                    # Add runtime information
                     runtime_info = ""
                     if bb_id in bb_runtime_map:
                         exec_count, total_time = bb_runtime_map[bb_id]
-                        runtime_info = f"[exec={exec_count}, time={total_time:.4f}s]"
+                        runtime_info = f" [exec={exec_count}, time={total_time:.4f}s]"
                     
-                    # Add memory information
                     memory_info = ""
                     if bb_id in bb_memory_map:
                         memory_usage = bb_memory_map[bb_id]
-                        memory_info = f"[mem={memory_usage} bytes]"
+                        memory_info = f" [mem={memory_usage} bytes]"
                     
                     if jumps:
-                        parts.append(f"{bb} {runtime_info} {memory_info} → {', '.join(jumps)}")
+                        parts.append(f"{bb} → {', '.join(jumps)}{runtime_info}{memory_info}")
                     else:
-                        parts.append(f"{bb} {runtime_info} {memory_info}")
+                        parts.append(f"{bb}{runtime_info}{memory_info}")
                 bb_comment = "  # " + " | ".join(parts)
 
             full_line = line + bb_comment
             annotated_lines.append(full_line)
 
+            # Uncomment to add instruction information
             # 2. Add single-line instruction array annotation
-            if idx in instr_line_map:
-                instr_group = ", ".join(instr_line_map[idx])
-                annotated_lines.append(" " * 8 + f"#   [{instr_group}]")
+            # if idx in instr_line_map:
+            #     instr_group = ", ".join(instr_line_map[idx])
+            #     annotated_lines.append(" " * 8 + f"#   [{instr_group}]")
 
         annotated_code = "\n".join(annotated_lines)
         print(annotated_code)
@@ -403,6 +198,38 @@ class ShellGhost:
         
         return annotated_code
     
+    def write_error_response_to_file(self, error_response, output_filename=None):
+        
+        if self.source_file_path:
+            source_dir = os.path.dirname(self.source_file_path)
+            base_name = os.path.basename(self.source_file_path)
+            source_name = os.path.splitext(base_name)[0]
+        else:
+            source_dir = "."  
+            source_name = "unknown_source"
+        
+        if not output_filename:
+            timestamp = int(time.time())
+            filename = f"{source_name}_error_analysis_{timestamp}.json"
+        else:
+            filename = output_filename
+        
+        if not filename.endswith('.json'):
+            filename += '.json'
+        
+        full_path = os.path.join(source_dir, filename)
+        
+        try:
+            json_str = json.dumps(error_response, indent=4)
+            
+            with open(full_path, 'w') as f:
+                f.write(json_str)
+            
+            print(f"Error analysis written to {full_path}")
+            return True
+        except Exception as e:
+            print(f"Error writing to file: {e}")
+            return False
     def prompt_annotated_code(self, annotated_code):
         prompt = f"""
         I have a JacLang program annotated with control flow and bytecode information.
@@ -420,14 +247,17 @@ class ShellGhost:
         - validating inputs before use
         - guarding against dangerous instructions like division, jumps, or external calls
         5. Any **performance improvements** or simplifications
-        6. If possible: point out which **line numbers** or **blocks** the issue is in
+        6. Point out which **line numbers** the issue is in
 
         Here is the annotated code:
-        {annotated_code}"""
+        {annotated_code}
+        """
 
         error_response = self.model.generate_structured(prompt)
-        # print(error_response)
-        for error in error_response['error_list']:
+        self.write_error_response_to_file(error_response)
+        print(error_response)
+        response = ""
+        for improvement in error_response['improvement_list']:
             prompt = f"""
             I have a JacLang program annotated with control flow and bytecode information.
             Each line may include:
@@ -435,275 +265,193 @@ class ShellGhost:
             - Bytecode instructions generated from that line (e.g., `#   [LOAD_NAME n, BINARY_OP /]`)
             Here is the annotated code:
             {annotated_code}
-            That has the following errors:
-            {error}
+            This code can be improved as follows:
+            {improvement}
             Please provide ONLY actual executable code that fixes this error.
             The code should handle the error case properly following these requirements:
             1. Don't change the overall behavior of the program
             2. Add appropriate safety checks to prevent the error
             3. Return only the code that needs to be injected, no explanations
             
-            Format your response as a Python code block starting with ```python and ending with ```
-
+            Format your response as a Python code block starting with ```python and ending with ```\
             """
-            response = self.model.generate(prompt)
-            lines = response.strip().splitlines()
-            response = "\n".join(line for line in lines if not line.strip().startswith("```"))
+            response = self.model.generate_fixed_code(prompt)
+
+            lines = response["fix_code"].splitlines()
+            response["fix_code"] = "\n".join(line for line in lines if not line.strip().startswith("```"))
             print(prompt)
             print(response)
         return response
     
 
 
-    def prompt_for_runtime(self, verbose: bool = False):
-        prompt = """I have a program.
-        Up to last {history_size} CFGs recorded:
-        {cfgs},
-        Instructions per basic block:
-        {instructions}
-        Semantic and Type information from source code:
-        {sem_ir}"""
-
-        cfg_string = ""
-        ins_string = ""
-        for module, cfg in self.cfgs.items():
-            cfg_history = "None at this time"
-            if module in self.__cfg_deque_dict:
-              cfg_history = self.__cfg_deque_dict[module].get_cfg_repr()
-            cfg_string += f"Module: {module}\n{cfg_history}"
-            ins_string += f"Module: {module}\n{cfg.display_instructions()}"
-
-        prompt = prompt.format(
-            history_size=self.__cfg_deque_size,
-            cfgs=cfg_string, 
-            instructions=ins_string, 
-            sem_ir=self.sem_ir.pp()
-        )
-
-        if self.variable_values != None:
-            prompt += "\nCurrent variable values at the specified bytecode offset:"
-
-            for module, var_map in self.variable_values.items():
-                prompt += f"\nModule {module}: Offset: {var_map[0]}, Variables: {str(var_map[1])}"
-
-        prompt +=   """\n given this information, what is the program behavior? What type of runtime error can occurs?
-                    If there are any possible runtime errors, what line number is the instruction that causes the error?
-                    """
-                    
-        print("PROMPT: ", prompt)
-        response = self.model.generate_structured(prompt)
-        return response
+    def apply_fix_to_source(self, fix_code, start_line, end_line=None):
+        with open(self.source_file_path, 'r') as f:
+            lines = f.readlines()
     
-    def auto_fix_code(self, error):
-        prompt = """I have a program with a runtime error.
-        Up to last {history_size} CFGs recorded:
-        {cfgs}
-        Instructions per basic block:
-        {instructions}
-        Semantic and Type information from source code:
-        {sem_ir}
-
-        The program has the following runtime error:
-        {error}
-
-        Please provide ONLY actual executable code that fixes this error.
-        The code should handle the error case properly following these requirements:
-        1. Don't change the overall behavior of the program
-        2. Add appropriate safety checks to prevent the error
-        3. Return only the code that needs to be injected, no explanations
+        backup_path = f"{self.source_file_path}.backup.{int(time.time())}"
+        shutil.copy2(self.source_file_path, backup_path)
+        print(f"Created backup at {backup_path}")
         
-        Format your response as a Python code block starting with ```python and ending with ```
-        """
+        if end_line is None:
+            end_line = start_line
         
-        cfg_string = ""
-        ins_string = ""
-        for module, cfg in self.cfgs.items():
-            cfg_history = "None at this time"
-            if module in self.__cfg_deque_dict:
-                cfg_history = self.__cfg_deque_dict[module].get_cfg_repr()
-            cfg_string += f"Module: {module}\n{cfg_history}"
-            ins_string += f"Module: {module}\n{cfg.display_instructions()}"
-        
-        formatted_prompt = prompt.format(
-            history_size=self.__cfg_deque_size,
-            cfgs=cfg_string,
-            instructions=ins_string,
-            sem_ir=self.sem_ir.pp(),
-            error=error
-        )
-        
-        if self.variable_values is not None:
-            formatted_prompt += "\nCurrent variable values at the specified bytecode offset:"
-            for module, var_map in self.variable_values.items():
-                formatted_prompt += f"\nModule {module}: Offset: {var_map[0]}, Variables: {str(var_map[1])}"
-        
-        response = self.model.generate(formatted_prompt)
-        lines = response.strip().splitlines()
-        response = "\n".join(line for line in lines if not line.strip().startswith("```"))
+        if 1 <= start_line <= len(lines) and 1 <= end_line <= len(lines) and start_line <= end_line:
+            current_line = lines[start_line-1]
+            indentation = ''
+            for char in current_line:
+                if char in [' ', '\t']:
+                    indentation += char
+                else:
+                    break
             
-        return response
-    
-    def apply_fix_to_source(self, error, fixed_code):
-        try:
-            line_number = int(error.get("error_line_number", 0))
-            if line_number <= 0:
-                print(f"Error: Invalid line number received: {error.get('error_line_number')}")
-                return False
-        except (ValueError, TypeError):
-            print(f"Error: Could not parse line number from error data: {error.get('error_line_number')}")
-            return False
-
-        if not fixed_code or not isinstance(fixed_code, str):
-             print("Error: Invalid or empty fixed_code received.")
-             return False
-
-        print(f"Target line number: {line_number}")
-        print(f"Proposed fix code:\n---\n{fixed_code}\n---")
-
-        source_file = self.source_file_path
-        if not source_file:
-            print("Error: Source file path is not set in ShellGhost instance.")
-            return False
-
-        if not os.path.exists(source_file):
-            print(f"Error: Source file path does not exist: {source_file}")
-            return False
-
-        print(f"Located source file: {source_file}")
-
-        try:
-            with open(source_file, 'r', encoding='utf-8') as f: 
-                lines = f.readlines()
-        except Exception as e:
-            print(f"Error reading source file '{source_file}': {e}")
-            return False
-
-        if line_number > len(lines):
-             print(f"Error: Line number {line_number} is out of bounds for file '{source_file}' (length: {len(lines)} lines).")
-             return False
-
-        try:
-            original_line_content = lines[line_number - 1]
-            indent = original_line_content[:len(original_line_content) - len(original_line_content.lstrip())]
-            print(f"Original line ({line_number}): {original_line_content.strip()}")
-            print(f"Detected indent: '{indent}' (length: {len(indent)})")
-
-            fixed_lines_indented = []
-            for line in fixed_code.strip().splitlines(): 
-                fixed_lines_indented.append(indent + line)
-
-            fixed_code_indented = "\n".join(fixed_lines_indented) + "\n"
-            print(f"Indented fix code:\n---\n{fixed_code_indented}---")
-
-        except IndexError:
-            print(f"Error: Could not access line {line_number} for indentation check (file length {len(lines)}).")
-            return False
-        except Exception as e:
-            print(f"Error during indentation handling: {e}")
-            return False
-
-
-        backup_file = source_file + ".bak"
-        try:
-            shutil.copy2(source_file, backup_file)
-            print(f"Created backup file: {backup_file}")
-        except Exception as e:
-            print(f"CRITICAL Error: Failed to create backup file '{backup_file}': {e}")
-            print("Aborting fix application to prevent data loss.")
-            return False 
-
-        lines[line_number - 1] = fixed_code_indented
-
-        try:
-            with open(source_file, 'w', encoding='utf-8') as f: 
+            fix_lines = fix_code.strip().split('\n')
+            indented_fix_lines = []
+            
+            for line in fix_lines:
+                if line.strip():
+                    indented_fix_lines.append(indentation + line + '\n')
+                else:
+                    indented_fix_lines.append('\n')
+            
+            lines[start_line-1:end_line] = indented_fix_lines
+            
+            with open(self.source_file_path, 'w') as f:
                 f.writelines(lines)
-        except Exception as e:
-            print(f"Error writing fixed code back to '{source_file}': {e}")
-            print(f"Attempting to restore original file from backup '{backup_file}'...")
-            try:
-                shutil.copy2(backup_file, source_file)
-                print("Successfully restored original file from backup.")
-            except Exception as restore_e:
-                print(f"Failed to write fix AND failed to restore from backup: {restore_e}")
-            return False 
+            
+            if start_line == end_line:
+                print(f"Applied fix to line {start_line} in {self.source_file_path}")
+            else:
+                print(f"Applied fix to lines {start_line}-{end_line} in {self.source_file_path}")
+            return True
+        else:
+            print(f"Error: Line range {start_line}-{end_line} is invalid (file has {len(lines)} lines)")
+            return False
+
+    def apply_multiple_fix_up(self):
+        annotated_code = self.annotate_source_code()
+        prompt = f"""
+        I have a JacLang program annotated with control flow and bytecode information.
+        Each line may include:
+        - Basic block transitions (e.g., `# bb0 → bb1, bb2`)
+        - Bytecode instructions generated from that line (e.g., `#   [LOAD_NAME n, BINARY_OP /]`)
+
+        Please analyze the code carefully and identify:
+        1. Any **runtime errors** that may occur (e.g., division by zero, calling null values, type mismatches)
+        2. **Logic bugs or unreachable code paths** based on the control flow
+        3. **Control flow oddities**, such as:
+        - basic blocks with no successors
+        - jumps that never happen
+        4. Opportunities for **safety improvements**, such as:
+        - validating inputs before use
+        - guarding against dangerous instructions like division, jumps, or external calls
+        5. Any **performance improvements** or simplifications
+        6. Point out which **line numbers** the issue is in
+
+        Here is the annotated code:
+        {annotated_code}"""
+
+        error_response = self.model.generate_structured(prompt)
+
+        response = ""
+        for improvement in error_response['improvement_list']:
+            prompt = f"""
+            I have a JacLang program annotated with control flow and bytecode information.
+            Each line may include:
+            - Basic block transitions (e.g., `# bb0 → bb1, bb2`)
+            - Bytecode instructions generated from that line (e.g., `#   [LOAD_NAME n, BINARY_OP /]`)
+            Here is the annotated code:
+            {annotated_code}
+            This code can be improved as follows:
+            {improvement}
+            Please provide ONLY actual executable code that fixes this error.
+            The code should handle the error case properly following these requirements:
+            1. Don't change the overall behavior of the program
+            2. Add appropriate safety checks to prevent the error
+            3. Return only the code that needs to be injected, no explanations
+            
+            Format your response as a Python code block starting with ```python and ending with ```\
+            """
+            print(improvement)
+            response = self.model.generate_fixed_code(prompt)
+
+            lines = response["fix_code"].splitlines()
+            response["fix_code"] = "\n".join(line for line in lines if not line.strip().startswith("```"))
+            self.apply_fix_to_source(start_line=response["start_line"], end_line=response["end_line"], fix_code=response["fix_code"])
+            annotated_code = self.annotate_source_code()
+            print(prompt)
+            print(response)
+        return response
 
 
-        print(f"Successfully applied fix to '{source_file}' at line {line_number}.")
-        print("--- Code Fix Application Complete ---")
-        return True
-
-    
     def worker(self):
-        # get static cfgs
         self.cfg_cv.acquire()
         if self.cfgs == None:
             print("waiting")
             self.cfg_cv.wait()
-        # for module_name, cfg in self.cfgs.items():
-        #     print(f"Name: {module_name}")
+
         self.cfg_cv.release()
-
-        # Once cv has been notifie, self.cfgs is no longer accessed across threads
         current_executing_bbs = {}
-
+        bb_entry_time = {}
+        
         def update_cfg():
             exec_insts = self.tracker.get_exec_inst()
 
-            # don't prompt if there's nothing new
-            if exec_insts == {}:
+            if not exec_insts:
                 return
 
             for module, offset_list in exec_insts.items():
-                # print(offset_list)
                 try:
                     cfg = self.cfgs[module]
 
-                    if (
-                        module not in current_executing_bbs
-                    ):  # this means start at bb0, set exec count for bb0 to 1
+                    if module not in current_executing_bbs:
                         current_executing_bbs[module] = 0
                         cfg.block_map.idx_to_block[0].exec_count = 1
-
+                        _, _, first_time = offset_list[0]
+                        bb_entry_time[module] = first_time
 
                     for offset_tuple in offset_list:
                         offset = offset_tuple[0]
-                        # print(offset)
-                        if (
-                            offset
-                            not in cfg.block_map.idx_to_block[
-                                current_executing_bbs[module]
-                            ].bytecode_offsets
-                        ):
+                        timestamp = offset_tuple[2]
+                        current_bb = current_executing_bbs[module]
+
+                        if offset not in cfg.block_map.idx_to_block[current_executing_bbs[module]].bytecode_offsets:
                             for next_bb in cfg.edges[current_executing_bbs[module]]:
-                                if (
-                                    offset
-                                    in cfg.block_map.idx_to_block[
-                                        next_bb
-                                    ].bytecode_offsets
-                                ):
-                                    cfg.edge_counts[
-                                        (current_executing_bbs[module], next_bb)
-                                    ] += 1
-                                    # do some deque op
+                                if offset in cfg.block_map.idx_to_block[next_bb].bytecode_offsets:
+                                    if module in bb_entry_time:
+                                        elapsed = timestamp - bb_entry_time[module]
+                                        cfg.block_map.idx_to_block[current_bb].total_time += elapsed
+                                    else:
+                                        elapsed = 0
+                                    bb_entry_time[module] = timestamp
+
+                                    cfg.edge_counts[(current_executing_bbs[module], next_bb)] += 1
                                     cfg.block_map.idx_to_block[next_bb].exec_count += 1
                                     current_executing_bbs[module] = next_bb
                                     break
-                        assert (
-                            offset
-                            in cfg.block_map.idx_to_block[
-                                current_executing_bbs[module]
-                            ].bytecode_offsets
-                        )
+
+                        assert offset in cfg.block_map.idx_to_block[current_executing_bbs[module]].bytecode_offsets
+
                 except Exception as e:
-                    self.set_finished(e)
-                    print(e)
-                    break
+
+                    print(f"Exception found: {e}")
+                    
+                    annotated_code = self.annotate_source_code()
+                    
+                    fix_code = self.prompt_annotated_code(annotated_code)
+                    if fix_code:
+                        self.apply_fix_to_source(fix_code["line_number"], fix_code["fix_code"])
+                        continue
+                    else:
+                        self.set_finished(e)
+                        print(e)
+                        break
 
             self.variable_values = self.tracker.get_variable_values()
-            print("Updating cfg deque")
+            # print("Updating cfg deque")
             self.update_cfg_deque(cfg.get_cfg_repr(), module)
             self.logger.info(cfg.to_json())
-            print(f"CURRENT INPUTS: {self.tracker.get_inputs()}")
+            # print(f"CURRENT INPUTS: {self.tracker.get_inputs()}")
 
         self.finished_exception_lock.acquire()
         while not self.finished:
@@ -712,102 +460,20 @@ class ShellGhost:
             time.sleep(3)
             print("\nUpdating cfgs")
             update_cfg()
-            # self.logger.info(self.prompt_llm())
-            # print(f"history size: {len(self.__cfg_deque_dict['hot_path'])}")
             self.finished_exception_lock.acquire()
-            # time.sleep(1)
 
         self.finished_exception_lock.release()
 
         print("\nUpdating cfgs at the end")
         update_cfg()
-        # response = self.prompt_for_runtime()
-        # print(response["behavior_description"])
-        # print(response["error_list"])
-        self.prompt_annotated_code(self.annotate_source_code())
-        
-        # if len(response['error_list']) > 0:
-        #         fixes_applied = False
-        #         for error in response['error_list']:
-        #             fixed_code = self.auto_fix_code(error)
-        #             if fixed_code:
-        #                 print(f"Fixed code: {fixed_code}")
-        #                 # Apply the fix to the source file
-        #                 if self.apply_fix_to_source(error, fixed_code):
-        #                     fixes_applied = True
-        #                     print(f"Fix for {error['type_of_error']} at line {error['error_line_number']} applied!")
-        #                 else:
-        #                     print(f"Failed to apply fix for {error['type_of_error']} at line {error['error_line_number']}")
-                
-        #         if fixes_applied:
-        #             print("\nSome errors were fixed. Please run the program again to see the fixed code in action.")
+        #Multiple fixes needed
+        # self.apply_multiple_fix_up()
 
-        
-        # print(self.__cfg_deque_dict['hot_path'].get_cfg_repr())
-        # self.logger.info(self.prompt_llm())
-    
-    # def inject_code(self, code_to_inject: str, method_name: str = "worker", position: str = "before") -> dict:
-    #     result = {
-    #         "success": False,
-    #         "error": None,
-    #         "method": method_name,
-    #         "position": position
-    #     }
-        
-    #     try:
-    #         if not hasattr(self, method_name):
-    #             result["error"] = f"Method {method_name} not found in ShellGhost"
-    #             return result
-                
-    #         original_method = getattr(self, method_name)
-            
-    #         if not hasattr(self, "_original_methods"):
-    #             self._original_methods = {}
-    #         self._original_methods[method_name] = original_method
-            
-    #         method_context = {
-    #             "self": self,
-    #             "original_method": original_method,
-    #         }
-            
-    #         if position == "before":
-    #             def wrapper(*args, **kwargs):
-    #                 print(f"Executing injected code before {method_name}")
-    #                 exec(code_to_inject, globals(), {**method_context, "args": args, "kwargs": kwargs})
-    #                 return original_method(*args, **kwargs)
-    #         elif position == "after":
-    #             def wrapper(*args, **kwargs):
-    #                 result = original_method(*args, **kwargs)
-    #                 print(f"Executing injected code after {method_name}")
-    #                 exec(code_to_inject, globals(), {**method_context, "args": args, "kwargs": kwargs, "result": result})
-    #                 return result
-    #         elif position == "replace":
-    #             def wrapper(*args, **kwargs):
-    #                 print(f"Executing injected code replacing {method_name}")
-    #                 local_vars = {**method_context, "args": args, "kwargs": kwargs}
-    #                 exec(code_to_inject, globals(), local_vars)
-    #                 return local_vars.get("result", None)
-    #         else:
-    #             result["error"] = f"Invalid position: {position}"
-    #             return result
-                
-    #         setattr(self, method_name, wrapper)
-            
-    #         if not hasattr(self, "restore_original_method"):
-    #             def restore_original_method(self, method_name):
-    #                 if hasattr(self, "_original_methods") and method_name in self._original_methods:
-    #                     setattr(self, method_name, self._original_methods[method_name])
-    #                     del self._original_methods[method_name]
-    #                     return True
-    #                 return False
-                
-    #             self.restore_original_method = types.MethodType(restore_original_method, self)
-            
-    #         result["success"] = True
-    #         return result
-        
-    #     except Exception as e:
-    #         import traceback
-    #         result["error"] = f"Error injecting into method: {str(e)}\n{traceback.format_exc()}"
-    #         return result
-        
+        # One fix only 
+        annotated_code = self.annotate_source_code()
+        fix_code = self.prompt_annotated_code(annotated_code)
+        # if fix_code:
+        #     self.apply_fix_to_source(start_line=fix_code["start_line"], end_line=fix_code["end_line"], fix_code=fix_code["fix_code"])
+
+
+   
