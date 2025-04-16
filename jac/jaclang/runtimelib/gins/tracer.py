@@ -117,20 +117,7 @@ class CFGTracker:
             current_line = line
         return current_line
     
-    def get_runtime_info(self, top_k=5):
-        return self.curr_variables
-        # keys are (module, line_no, var_name, value), value is frequency
-        # ex. (example, 12, x, 45), value is how many times x = 45
-
-        for mod, lines in self.curr_variables.items():
-            for line, vars in lines.items():
-                for var, values in vars.items():
-                    sorted_vals = sorted(values.items(), key=lambda x: -x[1])
-                    top_vals, freqs = sorted_vals[:5]
-                    print(f"{mod}:{line} - {var} = {top_val} (seen {freq} times)")
-        
-        return runtime_info
-
+    
     def trace_callback(
         self, frame: types.FrameType, event: str, arg: any
     ) -> Optional[Callable]:
