@@ -1,17 +1,17 @@
-with entry {   # bb0 → bb1 [exec=1, time=0.0012s] [mem=121776 bytes]
-    x:int = 0;  # bb0 → bb1 [exec=1, time=0.0012s] [mem=121776 bytes]
-    y:int = 3;  # bb0 → bb1 [exec=1, time=0.0012s] [mem=121776 bytes]
-    z:int = x + y;  # bb0 → bb1 [exec=1, time=0.0012s] [mem=121776 bytes]
-    for i in range(49) {  # bb1 → bb4, bb3, bb2 [exec=50, time=0.0784s] [mem=121776 bytes] | bb0 → bb1 [exec=1, time=0.0012s] [mem=121776 bytes] | bb4 [exec=1, time=0.0000s] [mem=121776 bytes]
-        x = 4 * i + y * (z);  # bb1 → bb4, bb3, bb2 [exec=50, time=0.0784s] [mem=121776 bytes]
-        if x % 2 {  # bb1 → bb4, bb3, bb2 [exec=50, time=0.0784s] [mem=121776 bytes]
-            y= 0;  # bb2 → bb1 [exec=1, time=0.0001s] [mem=121776 bytes]
+with entry {  # BB: 0 Execution frequency: 1 Total execution time: 0.001 ms
+    x:int = 0; # BB: 0
+    y:int = 3; # BB: 0
+    z:int = x + y; # BB: 0
+    for i in range(49) { # BB: 0
+        x = 4 * i + y * (z); # BB: 1 Execution frequency: 50 Total execution time: 0.076 ms
+        if x % 2 { # BB: 1
+            y= 0; # BB: 2 Execution frequency: 1 Total execution time: 0.000 ms
         }
         else {
-          y = 4;  # bb3 → bb1 [exec=48, time=0.0115s] [mem=121776 bytes]
+          y = 4; # BB: 3 Execution frequency: 48 Total execution time: 0.011 ms
         }
     }
-    z = x/y;  # bb4 [exec=1, time=0.0000s] [mem=121776 bytes]
-    print(y);  # bb4 [exec=1, time=0.0000s] [mem=121776 bytes]
-    print("hello");  # bb4 [exec=1, time=0.0000s] [mem=121776 bytes]
+    z = x/y; # BB: 4 Execution frequency: 1 Total execution time: 0.000 ms
+    print(y); # BB: 4
+    print("hello"); # BB: 4
 }
