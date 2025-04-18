@@ -149,15 +149,13 @@ class CFGTracker:
                 with self.curr_variables_lock:
                     
                     lineno = frame.f_lineno
-                    if lineno != self.curr_line:
-                        print(lineno)
+                    if lineno != self.curr_line and lineno is not None:
                         for var_name in frame.f_locals["__annotations__"]:
                         # capture input if changed
                             if var_name == "input_val":
                                 if not self.inputs or frame.f_locals[var_name] != self.inputs[-1]:
                                     self.inputs.append(frame.f_locals[var_name])
                         # keys are (module, line_no, var_name), value is frequency
-                            print("var_name", frame.f_locals[var_name])
                             variable_value = frame.f_locals[var_name]
                             self.curr_variables[module][lineno][var_name][variable_value] += 1
                             # print(self.curr_variables[module][lineno][var_name])

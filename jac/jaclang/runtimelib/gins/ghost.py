@@ -14,6 +14,7 @@ from collections import defaultdict
 from jaclang.runtimelib.gins.model import Gemini
 from jaclang.runtimelib.gins.tracer import CFGTracker, CfgDeque
 from pydantic import BaseModel
+from jaclang.runtimelib.gins.variable_tracker import VariableTracker
 
 # Helper class to maintain a fixed deque size
 def read_source_code(file_path: str) -> str:
@@ -83,134 +84,56 @@ class ShellGhost:
         self.finished = True
         self.finished_exception_lock.release()
 
-    
-    def basic_block_agg(self, curr_variable_values):
-        agg = defaultdict(                                   # module
-                lambda: defaultdict(                         # basic‑block id
-                    lambda: defaultdict(                     # variable
-                        lambda: defaultdict(int)             # value → count
-                    )   
-                )
-            )
-
-        for mod, lines in curr_variable_values.items():             # module
-            bbmap = self.cfgs[mod].block_map                        # convenience
-            for line_no, vars_at_line in lines.items():             # source line
-                # grab **all** blocks that contain that line
-                bb_id = bbmap.block_for_line(line_no)
-                for var, value_counts in vars_at_line.items():
-                    for value, cnt in value_counts.items():
-                        agg[mod][bb_id][var][value] += cnt
-
-        return agg
-
     def annotate_source_code(self):        
         source_code = read_source_code(self.source_file_path)
+        source_code_lines = source_code.splitlines()
+        annotated_lines = list(source_code_lines)
 
-        bb_line_map = defaultdict(set)    # line_num -> [bb0]
-        bb_jumps = defaultdict(list)      # bb0 -> [bb1, bb2]
-        instr_line_map = defaultdict(list)
+        # bb_line_map = defaultdict(set)    # line_num -> [bb0]
+        # bb_jumps = defaultdict(list)      # bb0 -> [bb1, bb2]
+        # instr_line_map = defaultdict(list)
         
         bb_runtime_map = {}   # bb_id -> (exec_count, total_time)
-        bb_memory_map = {}    # bb_id -> memory_usage
-        
-        mem_data = self.tracker.get_memory_usage()
-        if mem_data:
-            for module, usage_list in mem_data.items():
-                if module in self.cfgs:
-                    cfg = self.cfgs[module]
-                    for offset, line_no, top_stats in usage_list:
-                        for block_id, block in cfg.block_map.idx_to_block.items():
-                            if any(offset in block.bytecode_offsets for offset in block.bytecode_offsets):
-                                if block_id not in bb_memory_map:
-                                    bb_memory_map[block_id] = 0
-                                bb_memory_map[block_id] += sum(stat.size_diff for stat in top_stats)
 
         for module, cfg in self.cfgs.items():
-            current_bb = None
-            last_valid_lineno = None
 
             for block_id, block in cfg.block_map.idx_to_block.items():
                 bb_runtime_map[block_id] = (block.exec_count, block.total_time)
-            for line in cfg.display_instructions().splitlines():
-                if match := re.search(r'^(?:Node )?(bb\d+):', line):
-                    current_bb = match.group(1)
 
-                elif "Instr:" in line and current_bb:
-                    m = re.search(r'Lineno=(\d+)', line)
-                    if m:
-                        lineno = int(m.group(1))
-                        last_valid_lineno = lineno
-                    elif last_valid_lineno is not None:
-                        lineno = last_valid_lineno
+            current_bb = -1
+            for line_number in range(1, len(source_code_lines) + 1):
+                if line_number in cfg.block_map.line_to_blocks:
+                    block_id = cfg.block_map.line_to_blocks[line_number]
+                    if block_id != current_bb:
+                        current_bb = block_id
+                        execution_freq, execution_time = bb_runtime_map[block_id]
+                        # print("line_number", line_number, "block_at_line", block_at_line, " current_bb", current_bb)
+                        # if block_at_line != current_bb:
+                        #     current_bb += 1
+                        annotated_lines[line_number - 1] += f" # BB: {block_id} Execution frequency: {execution_freq} Total execution time: {execution_time:.3f} ms"
                     else:
-                        continue  
+                        annotated_lines[line_number - 1] += f" # BB: {block_id}"
 
-                    bb_line_map[lineno].add(current_bb)
+            
+            # for line_number, block_id in cfg.block_map.line_to_blocks.items():
+            #     print(line_number)
+            #     annotated_lines[line_number] += f" # BB: {block_id}"
 
-                    opname = re.search(r'Opname=([^,]+)', line)
-                    arg = re.search(r'arg=(\S+)', line)
-                    argval = re.search(r'argval=([^,]+)', line)
-                    argrep = re.search(r'argrepr=([^,]+)', line)
-                    jump_t = re.search(r'jump_t=(\w+)', line)
 
-                    opname_str = opname.group(1) if opname else "UNKNOWN"
-                    summary = f"{opname_str}"
-                    if argrep and argrep.group(1):
-                        summary += f" {argrep.group(1)}"
-                    elif argval and argval.group(1) != 'None':
-                        summary += f" {argval.group(1)}"
-                    if jump_t:
-                        summary += f" [jump_t={jump_t.group(1)}]"
-                    if arg and arg.group(1) not in ['None', '']:
-                        summary += f" [arg={arg.group(1)}]"
+        # for idx, line in enumerate(source_code.splitlines(), start=1):
+        #     bb_comment = ""
+        #     bb_id = self.cfgs[module].block_map.block_for_line(idx)
 
-                    instr_line_map[lineno].append(summary)
+        #     full_line = line + bb_comment
+        #     annotated_lines.append(full_line)
 
-            current_bb = None
-            for line in cfg.get_cfg_repr().splitlines():
-                if match := re.search(r'Node (bb\d+)', line):
-                    current_bb = match.group(1)
-                elif match := re.findall(r'-> (bb\d+)', line):
-                    bb_jumps[current_bb].extend(match)
+        #     # Uncomment to add instruction information
+        #     # 2. Add single-line instruction array annotation
+        #     # if idx in instr_line_map:
+        #     #     instr_group = ", ".join(instr_line_map[idx])
+        #     #     annotated_lines.append(" " * 8 + f"#   [{instr_group}]")
 
-        annotated_lines = []
-        for idx, line in enumerate(source_code.splitlines(), start=1):
-            bb_comment = ""
-            if idx in bb_line_map:
-                parts = []
-                for bb in bb_line_map[idx]:
-                    jumps = bb_jumps.get(bb, [])
-                    bb_id = int(bb[2:])
-                    
-                    runtime_info = ""
-                    if bb_id in bb_runtime_map:
-                        exec_count, total_time = bb_runtime_map[bb_id]
-                        runtime_info = f" [exec={exec_count}, time={total_time:.4f}s]"
-                    
-                    memory_info = ""
-                    if bb_id in bb_memory_map:
-                        memory_usage = bb_memory_map[bb_id]
-                        memory_info = f" [mem={memory_usage} bytes]"
-                    
-                    if jumps:
-                        parts.append(f"{bb} → {', '.join(jumps)}{runtime_info}{memory_info}")
-                    else:
-                        parts.append(f"{bb}{runtime_info}{memory_info}")
-                bb_comment = "  # " + " | ".join(parts)
-
-            full_line = line + bb_comment
-            annotated_lines.append(full_line)
-
-            # Uncomment to add instruction information
-            # 2. Add single-line instruction array annotation
-            # if idx in instr_line_map:
-            #     instr_group = ", ".join(instr_line_map[idx])
-            #     annotated_lines.append(" " * 8 + f"#   [{instr_group}]")
-
-        annotated_code = "\n".join(annotated_lines)
-        print(annotated_code)
-        
+        annotated_code = "\n".join(annotated_lines)        
         # Save to file
         output_path = self.source_file_path + ".annotated.jac"
         with open(output_path, "w") as f:
@@ -251,7 +174,7 @@ class ShellGhost:
         except Exception as e:
             print(f"Error writing to file: {e}")
             return False
-    def prompt_annotated_code(self, annotated_code):
+    def prompt_annotated_code(self, annotated_code, variable_tracker):
         prompt = f"""
         I have a JacLang program annotated with control flow and bytecode information.
         Each line may include:
@@ -272,7 +195,10 @@ class ShellGhost:
 
         Here is the annotated code:
         {annotated_code}
+        Here is also the frequencies for dynamic values in variables in each basic block:
+        {variable_tracker}
         """
+        print("prompt", prompt)
 
         error_response = self.model.generate_structured(prompt)
         self.write_error_response_to_file(error_response)
@@ -466,19 +392,7 @@ class ShellGhost:
                     self.set_finished(e)
                     print(e)
                     break
-
-            curr_variable_values = self.tracker.get_variable_values()
-            basic_block_agg = self.basic_block_agg(curr_variable_values)
-            TOP_N = 5
-            for mod, bb_dict in basic_block_agg.items():
-                for bb_id, var_dict in bb_dict.items():
-                    for var, val_counts in var_dict.items():
-                        top_vals = sorted(val_counts.items(),
-                                        key=lambda x: -x[1])[:TOP_N]
-                        for val, freq in top_vals:
-                            print(f"{mod}:bb{bb_id} - {var} = {val}  (seen {freq}×)")
-
-
+            
             # print("Updating cfg deque")
             self.update_cfg_deque(cfg.get_cfg_repr(), module)
             self.logger.info(cfg.to_json())
@@ -499,12 +413,19 @@ class ShellGhost:
         update_cfg()
         for cfg in self.cfgs.values():
             print(cfg.get_cfg_repr())
+        
+        # print("\nAnnotating source code")
+        # annotated_code = self.annotate_source_code()
+        # print(annotated_code)
         #Multiple fixes needed
         # self.apply_multiple_fix_up()
 
-        # One fix only 
-        # annotated_code = self.annotate_source_code()
-        # fix_code = self.prompt_annotated_code(annotated_code)
+        # One fix only
+        for module, cfg in self.cfgs.items():
+            annotated_code = self.annotate_source_code()
+            variable_tracker = VariableTracker(self.tracker.get_variable_values(), cfg.block_map.line_to_blocks)
+            fix_code = self.prompt_annotated_code(annotated_code, variable_tracker)
+            print(fix_code)
         # if fix_code:
         #     self.apply_fix_to_source(start_line=fix_code["start_line"], end_line=fix_code["end_line"], fix_code=fix_code["fix_code"])
 

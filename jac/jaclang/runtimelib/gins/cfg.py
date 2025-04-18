@@ -94,7 +94,7 @@ class BlockMap:
     def add_block(self, idx, block):
         self.idx_to_block[idx] = block
         for instr in block.instructions:
-            if instr.lineno is not None:
+            if instr.lineno is not None and instr.lineno not in self.line_to_blocks:
                 self.line_to_blocks[instr.lineno] = idx
 
     def block_for_line(self, lineno: int) -> Optional[int]:
