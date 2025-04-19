@@ -87,60 +87,153 @@ class ShellGhost:
     def annotate_source_code(self):        
         source_code = read_source_code(self.source_file_path)
         source_code_lines = source_code.splitlines()
-        annotated_lines = list(source_code_lines)
-
-        # bb_line_map = defaultdict(set)    # line_num -> [bb0]
-        # bb_jumps = defaultdict(list)      # bb0 -> [bb1, bb2]
-        # instr_line_map = defaultdict(list)
+        
+        # Create 5 different versions of annotations
+        versions = {
+            "source_only": list(source_code_lines),        # Just source code
+            "with_bb": list(source_code_lines),            # With basic block info
+            "with_instr": list(source_code_lines),         # With instructions
+            "with_vars": list(source_code_lines),          # With variable values
+            "complete": list(source_code_lines)            # With all annotations
+        }
         
         bb_runtime_map = {}   # bb_id -> (exec_count, total_time)
-
+        instr_line_map = defaultdict(list)  # line_number -> [instruction strings]
+        
         for module, cfg in self.cfgs.items():
-
+            # Map basic blocks to their runtime metrics
             for block_id, block in cfg.block_map.idx_to_block.items():
                 bb_runtime_map[block_id] = (block.exec_count, block.total_time)
-
-            current_bb = -1
-            for line_number in range(1, len(source_code_lines) + 1):
-                if line_number in cfg.block_map.line_to_blocks:
-                    block_id = cfg.block_map.line_to_blocks[line_number]
-                    if block_id != current_bb:
-                        current_bb = block_id
-                        execution_freq, execution_time = bb_runtime_map[block_id]
-                        # print("line_number", line_number, "block_at_line", block_at_line, " current_bb", current_bb)
-                        # if block_at_line != current_bb:
-                        #     current_bb += 1
-                        annotated_lines[line_number - 1] += f" # BB: {block_id} Execution frequency: {execution_freq} Total execution time: {execution_time:.3f} ms"
+                
+                # Map instructions to their source lines
+                for instr in block.instructions:
+                    # If instruction has a line number, map it to that line
+                    if instr.lineno is not None:
+                        line_number = instr.lineno
+                        instr_line_map[line_number].append(f"{instr.op}({instr.argval})")
+                    # If no line number, map it to the line where the block starts
                     else:
-                        annotated_lines[line_number - 1] += f" # BB: {block_id}"
-
+                        # Find the first instruction in this block that has a line number
+                        first_line = None
+                        for first_instr in block.instructions:
+                            if first_instr.lineno is not None:
+                                first_line = first_instr.lineno
+                                break
+                        
+                        # If we found a line number, use it
+                        if first_line is not None:
+                            instr_line_map[first_line].append(f"{instr.op}({instr.argval}) [no line]")
+                        # If no instruction in this block has a line number, use the block_id as a key
+                        else:
+                            special_key = f"block_{block_id}"
+                            if special_key not in instr_line_map:
+                                instr_line_map[special_key] = []
+                            instr_line_map[special_key].append(f"{instr.op}({instr.argval})")
             
-            # for line_number, block_id in cfg.block_map.line_to_blocks.items():
-            #     print(line_number)
-            #     annotated_lines[line_number] += f" # BB: {block_id}"
-
-
-        # for idx, line in enumerate(source_code.splitlines(), start=1):
-        #     bb_comment = ""
-        #     bb_id = self.cfgs[module].block_map.block_for_line(idx)
-
-        #     full_line = line + bb_comment
-        #     annotated_lines.append(full_line)
-
-        #     # Uncomment to add instruction information
-        #     # 2. Add single-line instruction array annotation
-        #     # if idx in instr_line_map:
-        #     #     instr_group = ", ".join(instr_line_map[idx])
-        #     #     annotated_lines.append(" " * 8 + f"#   [{instr_group}]")
-
-        annotated_code = "\n".join(annotated_lines)        
-        # Save to file
-        output_path = self.source_file_path + ".annotated.jac"
-        with open(output_path, "w") as f:
-            f.write(annotated_code)
-        print(f"\n Annotated source written to: {output_path}")
-        
-        return annotated_code
+            # Create the variable tracker to access variable information per block
+            variable_tracker = VariableTracker(self.tracker.get_variable_values(),
+                                            cfg.block_map.line_to_blocks)
+            
+            # Process each version with appropriate annotations
+            for version_name in versions:
+                current_bb = -1
+                inserted_line_count = 0  # Track how many lines we've inserted for correct positioning
+                
+                # First, handle any special blocks with no line numbers
+                special_blocks = [key for key in instr_line_map.keys() if isinstance(key, str) and key.startswith("block_")]
+                if special_blocks and version_name in ["complete"]:
+                    # Add a section at the top for instructions without line mappings
+                    versions[version_name].insert(0, "# ==== INSTRUCTIONS WITHOUT LINE MAPPINGS ====")
+                    inserted_line_count += 1
+                    
+                    for block_key in special_blocks:
+                        block_id = int(block_key.split('_')[1])
+                        execution_freq, execution_time = bb_runtime_map[block_id]
+                        
+                        block_header = f"# BB: {block_id} Execution frequency: {execution_freq} Total execution time: {execution_time:.3f} ms"
+                        versions[version_name].insert(inserted_line_count, block_header)
+                        inserted_line_count += 1
+                        
+                        instr_line = f"#   Instructions: [{', '.join(instr_line_map[block_key])}]"
+                        versions[version_name].insert(inserted_line_count, instr_line)
+                        inserted_line_count += 1
+                        
+                        # Add empty line for readability
+                        versions[version_name].insert(inserted_line_count, "")
+                        inserted_line_count += 1
+                    
+                    # Add separator after special blocks section
+                    versions[version_name].insert(inserted_line_count, "# " + "=" * 50)
+                    versions[version_name].insert(inserted_line_count + 1, "")
+                    inserted_line_count += 2
+            
+                # Now process normal source lines
+                for line_number in range(1, len(source_code_lines) + 1):
+                    adjusted_line_idx = line_number + inserted_line_count - 1
+                    
+                    # Add basic block annotations for appropriate versions
+                    if line_number in cfg.block_map.line_to_blocks and version_name in ["with_bb", "complete"]:
+                        block_id = cfg.block_map.line_to_blocks[line_number]
+                        if block_id != current_bb:
+                            current_bb = block_id
+                            execution_freq, execution_time = bb_runtime_map[block_id]
+                            versions[version_name][adjusted_line_idx] += f" # BB: {block_id} Execution frequency: {execution_freq} Total execution time: {execution_time:.3f} ms"
+                        else:
+                            versions[version_name][adjusted_line_idx] += f" # BB: {block_id}"
+                    
+                    # Add instruction annotations for appropriate versions
+                    if line_number in instr_line_map and instr_line_map[line_number] and version_name in ["with_instr", "complete"]:
+                        indent = len(versions[version_name][adjusted_line_idx]) - len(versions[version_name][adjusted_line_idx].lstrip())
+                        instruction_line = " " * indent + f"#   Instructions: [{', '.join(instr_line_map[line_number])}]"
+                        
+                        # Insert the instruction annotation after the current line
+                        versions[version_name].insert(adjusted_line_idx + 1, instruction_line)
+                        inserted_line_count += 1
+                    
+                    # Add variable tracking information for appropriate versions
+                    if line_number in cfg.block_map.line_to_blocks and version_name in ["with_vars", "complete"]:
+                        block_id = cfg.block_map.line_to_blocks[line_number]
+                        # Check if we have variable information for this module and block
+                        if module in variable_tracker.variables and block_id in variable_tracker.variables[module]:
+                            var_dict = variable_tracker.variables[module][block_id]
+                            if var_dict:
+                                # Calculate appropriate line index based on whether instructions were inserted
+                                var_line_idx = adjusted_line_idx + 1
+                                if version_name == "complete" and line_number in instr_line_map:
+                                    var_line_idx += 1
+                                    
+                                # Calculate indent based on the appropriate previous line
+                                indent = len(versions[version_name][var_line_idx - 1]) - len(versions[version_name][var_line_idx - 1].lstrip())
+                                
+                                # Build the variable values string
+                                var_values_parts = []
+                                for var_name, val_counts in var_dict.items():
+                                    top_vals = sorted(val_counts.items(), key=lambda x: -x[1])[:variable_tracker.top_k]
+                                    for val, freq in top_vals:
+                                        var_values_parts.append(f"{var_name} = {val} (seen {freq}×)")
+                                
+                                # Create the single line with all variable information
+                                if var_values_parts:
+                                    var_line = " " * indent + "#   Variable values in this block:   " + "  ".join(var_values_parts)
+                                    versions[version_name].insert(var_line_idx, var_line)
+                                    inserted_line_count += 1
+            
+            # Save all versions to appropriate files
+            base_output_path = self.source_file_path
+            
+            for version_name, annotated_lines in versions.items():
+                annotated_code = "\n".join(annotated_lines)
+                output_path = f"{base_output_path}.{version_name}.jac"
+                
+                with open(output_path, "w") as f:
+                    f.write(annotated_code)
+                
+                print(f"\n {version_name} version written to: {output_path}")
+                
+                # Generate analysis for each version
+                self.prompt_annotated_code(annotated_code, variable_tracker, version_name)
+            
+            return versions["complete"]  # Return the complete version for backward compatibility
     
     def write_error_response_to_file(self, error_response, output_filename=None):
         
@@ -174,13 +267,38 @@ class ShellGhost:
         except Exception as e:
             print(f"Error writing to file: {e}")
             return False
-    def prompt_annotated_code(self, annotated_code, variable_tracker):
+        
+    def prompt_annotated_code(self, annotated_code, variable_tracker, version_name="complete"):
         prompt = f"""
         I have a JacLang program annotated with control flow and bytecode information.
         Each line may include:
-        - Basic block transitions (e.g., `# bb0 → bb1, bb2`)
-        - Bytecode instructions generated from that line (e.g., `#   [LOAD_NAME n, BINARY_OP /]`)
-
+        """
+        
+        # Customize prompt based on the version
+        if version_name == "source_only":
+            prompt += """
+            - No additional annotations, just source code
+            """
+        elif version_name == "with_bb":
+            prompt += """
+            - Basic block annotations (e.g., `# BB: 0 Execution frequency: 1 Total execution time: 0.001 ms`)
+            """
+        elif version_name == "with_instr":
+            prompt += """
+            - Bytecode instructions generated from that line (e.g., `#   Instructions: [SETUP_ANNOTATIONS(None)]`)
+            """
+        elif version_name == "with_vars":
+            prompt += """
+            - Variable values observed in this block (e.g., `#   Variable values in this block:   x = 0 (seen 3×)  y = 4 (seen 48×)`)
+            """
+        else:  
+            prompt += """
+            - Basic block transitions (e.g., `# BB: 0 Execution frequency: 1 Total execution time: 0.001 ms`)
+            - Bytecode instructions generated from that line (e.g., `#   Instructions: [SETUP_ANNOTATIONS(None)]`)
+            - Variable values observed in this block (e.g., `#   Variable values in this block:   x = 0 (seen 3×)  y = 4 (seen 48×)`)
+            """
+        
+        prompt += f"""
         Please analyze the code carefully and identify:
         1. Any **runtime errors** that may occur (e.g., division by zero, calling null values, type mismatches)
         2. **Logic bugs or unreachable code paths** based on the control flow
@@ -192,145 +310,36 @@ class ShellGhost:
         - guarding against dangerous instructions like division, jumps, or external calls
         5. Any **performance improvements** or simplifications
         6. Point out which **line numbers** the issue is in
-
+        
         Here is the annotated code:
         {annotated_code}
-        Here is also the frequencies for dynamic values in variables in each basic block:
-        {variable_tracker}
         """
-        print("prompt", prompt)
-
+        
+        # Only add variable tracker information for versions that don't already include it
+        if version_name not in ["with_vars", "complete"]:
+            prompt += f"""
+            Here is also the frequencies for dynamic values in variables in each basic block:
+            {variable_tracker}
+            """
+        
+        print(f"Generating analysis for {version_name} version")
         error_response = self.model.generate_structured(prompt)
-        self.write_error_response_to_file(error_response)
+        
+        # Write the response to a file with a version-specific name
+        output_filename = None
+        if self.source_file_path:
+            source_dir = os.path.dirname(self.source_file_path)
+            base_name = os.path.basename(self.source_file_path)
+            source_name = os.path.splitext(base_name)[0]
+            timestamp = int(time.time())
+            output_filename = f"{source_name}_error_analysis_{version_name}_{timestamp}.json"
+        
+        self.write_error_response_to_file(error_response, output_filename)
         print(error_response)
-        response = ""
-        for improvement in error_response['improvement_list']:
-            prompt = f"""
-            I have a JacLang program annotated with control flow and bytecode information.
-            Each line may include:
-            - Basic block transitions (e.g., `# bb0 → bb1, bb2`)
-            - Bytecode instructions generated from that line (e.g., `#   [LOAD_NAME n, BINARY_OP /]`)
-            Here is the annotated code:
-            {annotated_code}
-            This code can be improved as follows:
-            {improvement}
-            Please provide ONLY actual executable code that fixes this error.
-            The code should handle the error case properly following these requirements:
-            1. Don't change the overall behavior of the program
-            2. Add appropriate safety checks to prevent the error
-            3. Return only the code that needs to be injected, no explanations
-            
-            Format your response as a Python code block starting with ```python and ending with ```\
-            """
-            response = self.model.generate_fixed_code(prompt)
-
-            lines = response["fix_code"].splitlines()
-            response["fix_code"] = "\n".join(line for line in lines if not line.strip().startswith("```"))
-            print(prompt)
-            print(response)
-        return response
+        return error_response
     
 
-
-    def apply_fix_to_source(self, fix_code, start_line, end_line=None):
-        with open(self.source_file_path, 'r') as f:
-            lines = f.readlines()
     
-        backup_path = f"{self.source_file_path}.backup.{int(time.time())}"
-        shutil.copy2(self.source_file_path, backup_path)
-        print(f"Created backup at {backup_path}")
-        
-        if end_line is None:
-            end_line = start_line
-        
-        if 1 <= start_line <= len(lines) and 1 <= end_line <= len(lines) and start_line <= end_line:
-            current_line = lines[start_line-1]
-            indentation = ''
-            for char in current_line:
-                if char in [' ', '\t']:
-                    indentation += char
-                else:
-                    break
-            
-            fix_lines = fix_code.strip().split('\n')
-            indented_fix_lines = []
-            
-            for line in fix_lines:
-                if line.strip():
-                    indented_fix_lines.append(indentation + line + '\n')
-                else:
-                    indented_fix_lines.append('\n')
-            
-            lines[start_line-1:end_line] = indented_fix_lines
-            
-            with open(self.source_file_path, 'w') as f:
-                f.writelines(lines)
-            
-            if start_line == end_line:
-                print(f"Applied fix to line {start_line} in {self.source_file_path}")
-            else:
-                print(f"Applied fix to lines {start_line}-{end_line} in {self.source_file_path}")
-            return True
-        else:
-            print(f"Error: Line range {start_line}-{end_line} is invalid (file has {len(lines)} lines)")
-            return False
-
-    def apply_multiple_fix_up(self):
-        annotated_code = self.annotate_source_code()
-        prompt = f"""
-        I have a JacLang program annotated with control flow and bytecode information.
-        Each line may include:
-        - Basic block transitions (e.g., `# bb0 → bb1, bb2`)
-        - Bytecode instructions generated from that line (e.g., `#   [LOAD_NAME n, BINARY_OP /]`)
-
-        Please analyze the code carefully and identify:
-        1. Any **runtime errors** that may occur (e.g., division by zero, calling null values, type mismatches)
-        2. **Logic bugs or unreachable code paths** based on the control flow
-        3. **Control flow oddities**, such as:
-        - basic blocks with no successors
-        - jumps that never happen
-        4. Opportunities for **safety improvements**, such as:
-        - validating inputs before use
-        - guarding against dangerous instructions like division, jumps, or external calls
-        5. Any **performance improvements** or simplifications
-        6. Point out which **line numbers** the issue is in
-
-        Here is the annotated code:
-        {annotated_code}"""
-
-        error_response = self.model.generate_structured(prompt)
-
-        response = ""
-        for improvement in error_response['improvement_list']:
-            prompt = f"""
-            I have a JacLang program annotated with control flow and bytecode information.
-            Each line may include:
-            - Basic block transitions (e.g., `# bb0 → bb1, bb2`)
-            - Bytecode instructions generated from that line (e.g., `#   [LOAD_NAME n, BINARY_OP /]`)
-            Here is the annotated code:
-            {annotated_code}
-            This code can be improved as follows:
-            {improvement}
-            Please provide ONLY actual executable code that fixes this error.
-            The code should handle the error case properly following these requirements:
-            1. Don't change the overall behavior of the program
-            2. Add appropriate safety checks to prevent the error
-            3. Return only the code that needs to be injected, no explanations
-            
-            Format your response as a Python code block starting with ```python and ending with ```\
-            """
-            print(improvement)
-            response = self.model.generate_fixed_code(prompt)
-
-            lines = response["fix_code"].splitlines()
-            response["fix_code"] = "\n".join(line for line in lines if not line.strip().startswith("```"))
-            self.apply_fix_to_source(start_line=response["start_line"], end_line=response["end_line"], fix_code=response["fix_code"])
-            annotated_code = self.annotate_source_code()
-            print(prompt)
-            print(response)
-        return response
-
-
     def worker(self):
         self.cfg_cv.acquire()
         if self.cfgs == None:
@@ -383,12 +392,6 @@ class ShellGhost:
 
                     print(f"Exception found: {e}")
                     
-                    # annotated_code = self.annotate_source_code()
-                    
-                    # fix_code = self.prompt_annotated_code(annotated_code)
-                    # if fix_code:
-                    #     self.apply_fix_to_source(fix_code["line_number"], fix_code["fix_code"])
-                    #     continue
                     self.set_finished(e)
                     print(e)
                     break
@@ -414,20 +417,10 @@ class ShellGhost:
         for cfg in self.cfgs.values():
             print(cfg.get_cfg_repr())
         
-        # print("\nAnnotating source code")
-        # annotated_code = self.annotate_source_code()
-        # print(annotated_code)
-        #Multiple fixes needed
-        # self.apply_multiple_fix_up()
-
-        # One fix only
         for module, cfg in self.cfgs.items():
-            annotated_code = self.annotate_source_code()
+            self.annotate_source_code()
             variable_tracker = VariableTracker(self.tracker.get_variable_values(), cfg.block_map.line_to_blocks)
-            fix_code = self.prompt_annotated_code(annotated_code, variable_tracker)
-            print(fix_code)
-        # if fix_code:
-        #     self.apply_fix_to_source(start_line=fix_code["start_line"], end_line=fix_code["end_line"], fix_code=fix_code["fix_code"])
+
 
 
    

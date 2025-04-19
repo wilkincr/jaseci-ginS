@@ -1,0 +1,28 @@
+{
+    "improvement_list": [
+        {
+            "end_line": 4,
+            "improvement_desc": "Division by zero error. Add check to ensure 'n' is not zero before division.",
+            "start_line": 4,
+            "type_of_improvement": "runtime_error"
+        },
+        {
+            "end_line": 4,
+            "improvement_desc": "The condition 'n / 0 == 5' will always throw a runtime error, thus the code within the 'if' block is unreachable.  The 'else' block is always executed.",
+            "start_line": 4,
+            "type_of_improvement": "logic_bug"
+        },
+        {
+            "end_line": 5,
+            "improvement_desc": "Unreachable code. The 'if' condition always throws an error.",
+            "start_line": 5,
+            "type_of_improvement": "unreachable_code"
+        },
+        {
+            "end_line": 7,
+            "improvement_desc": "This line is always executed because the 'if' block is unreachable due to a division by zero.",
+            "start_line": 7,
+            "type_of_improvement": "control_flow_oddity"
+        }
+    ]
+}
