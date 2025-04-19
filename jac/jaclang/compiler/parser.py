@@ -1667,6 +1667,26 @@ class JacParser(Pass):
             else:
                 raise self.ice()
 
+        def smart_assert_stmt(self, kid: list[ast.AstNode]) -> ast.SmartAssertStmt:
+            """Grammar rule.
+
+            smart_assert_stmt: KW_SMART_ASSERT expression (COMMA expression)?
+            """
+            condition = kid[1]
+            message = kid[3] if len(kid) > 3 and isinstance(kid[3], ast.Expr) else None
+            if isinstance(condition, ast.Expr):
+                return self.nu( 
+                    ast.SmartAssertStmt(
+                        condition=condition,
+                        message=message,
+                        kid=kid, 
+                    )
+                )
+            else:
+                raise self.ice()
+
+
+
         def check_stmt(self, kid: list[ast.AstNode]) -> ast.CheckStmt:
             """Grammar rule.
 

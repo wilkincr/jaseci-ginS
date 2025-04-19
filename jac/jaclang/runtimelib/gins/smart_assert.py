@@ -18,8 +18,9 @@ def smart_assert(condition: bool):
 
     annotated_code = active_shell_ghost.annotate_source_code()
 
-    file_path = getattr(active_shell_ghost, "mod_path", "<unknown>")
-
+    file_path = active_shell_ghost.source_file_path
+    file_name = os.path.basename(file_path)
+    print(file_name)
     prompt = f"""
     A smart assertion failed during program execution.
         
@@ -38,10 +39,9 @@ def smart_assert(condition: bool):
         "llm_response": response,
     }
 
-    # 4) Write it out
     out_dir = "examples/gins_scripts/smart_assert/smart_assert_reports"
     os.makedirs(out_dir, exist_ok=True)
-    fname = f"report_{datetime.utcnow():%Y%m%d_%H%M%S%f}.json"
+    fname = f"{file_name}_report_{datetime.utcnow():%Y%m%d_%H%M%S%f}.json"
     path = os.path.join(out_dir, fname)
     with open(path, "w") as fp:
         json.dump(output, fp, indent=2)

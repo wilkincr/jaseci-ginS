@@ -215,7 +215,28 @@ class PyastGenPass(Pass):
             )
         )
         self.already_added.append(self.needs_dataclass_field.__name__)
+    # Inside the PyastGenPass class:
 
+    def needs_smart_assert(self) -> None:
+        """Check if smart_assert import is needed."""
+        if self.needs_smart_assert.__name__ in self.already_added:
+            return
+        # IMPORTANT: Adjust the 'module' path if your smart_assert function
+        # lives somewhere else (e.g., "your_project.runtime_utils")
+        self.preamble.append(
+            self.sync(
+                ast3.ImportFrom(
+                    # <<<--- Adjust this module path if necessary --->>>
+                    module="jaclang.runtimelib.gins.smart_assert",
+                    names=[
+                        self.sync(ast3.alias(name="smart_assert", asname=None))
+                    ],
+                    level=0,
+                ),
+                jac_node=self.ir, # Use the root IR node for the import location
+            )
+        )
+        self.already_added.append(self.needs_smart_assert.__name__)
     def flatten(self, body: list[T | list[T] | None]) -> list[T]:
         """Flatten ast list."""
         new_body = []
@@ -1839,6 +1860,59 @@ class PyastGenPass(Pass):
                 )
             )
         ]
+    def exit_smart_assert_stmt(self, node: ast.SmartAssertStmt) -> None:
+        """Sub objects.
+
+        condition: Expr,
+        message: Optional[Expr], # This is the 'context' for smart_assert
+        """
+        # Ensure the necessary import is added to the preamble
+        self.needs_smart_assert()
+
+        # Ensure condition's Python AST is generated
+        cond_ast = node.condition.gen.py_ast[0] if node.condition.gen.py_ast else None
+        if not isinstance(cond_ast, ast3.expr):
+            self.error("Condition for smart_assert did not generate valid Python AST.", node.condition)
+            node.gen.py_ast = [] # Avoid further errors
+            return
+
+        # Ensure message's Python AST is generated or provide a default
+        msg_ast = None
+        if node.message:
+            if node.message.gen.py_ast:
+                msg_ast = node.message.gen.py_ast[0]
+                if not isinstance(msg_ast, ast3.expr):
+                    self.error("Message context for smart_assert did not generate valid Python AST.", node.message)
+                    # Fallback to default if invalid AST generated
+                    msg_ast = self.sync(ast3.Constant(value=""), node.message)
+            else:
+                # This case might indicate an issue earlier if message exists but has no py_ast
+                self.warning("Message context node present but no Python AST generated.", node.message)
+                msg_ast = self.sync(ast3.Constant(value=""), node.message)
+        else:
+            # Default to empty string if no message context is provided in Jac
+            msg_ast = self.sync(ast3.Constant(value=""), node)
+
+
+        # Create the Python Call node: smart_assert(condition_ast, message_ast)
+        py_call = ast3.Call(
+            func=self.sync(ast3.Name(id="smart_assert", ctx=ast3.Load()), node),
+            args=[cond_ast, msg_ast],
+            keywords=[],
+        )
+
+        # Wrap the call in an Expr statement since it doesn't return a value used elsewhere
+        py_expr_stmt = ast3.Expr(value=py_call)
+
+        # Sync location information from the Jac node to the Python node
+        # Sync the outer Expr statement as that represents the whole line
+        self.sync(py_expr_stmt, node)
+        # Also sync the inner call for potentially better debugging info if needed
+        self.sync(py_call, node)
+
+
+        # Store the generated Python AST node (the Expr wrapper around the Call)
+        node.gen.py_ast = [py_expr_stmt]
 
     def exit_check_stmt(self, node: ast.CheckStmt) -> None:
         """Sub objects.

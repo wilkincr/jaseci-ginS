@@ -393,7 +393,6 @@ class EnumBlockStmt(AstNode):
 class CodeBlockStmt(AstNode):
     """CodeBlockStmt node type for Jac Ast."""
 
-
 class AstImplOnlyNode(CodeBlockStmt, ElementStmt, AstSymbolNode):
     """ImplOnly node type for Jac Ast."""
 
@@ -2279,7 +2278,44 @@ class AssertStmt(CodeBlockStmt):
         self.set_kids(nodes=new_kid)
         return res
 
+class SmartAssertStmt(CodeBlockStmt): # Or Statement if that's the intended direct parent
+    """SmartAssertStmt node type for Jac Ast."""
+    def __init__(
+        self,
+        condition: Expr,
+        message: Optional[Expr], # Changed from error_msg to match grammar more closely
+        kid: Sequence[AstNode],  # Add kid parameter
+        **kwargs # Keep kwargs if there's a reason, otherwise remove
+    ) -> None:
+        """Initialize smart assert statement node."""
+        # Call AstNode's init directly, passing the children from the parse tree
+        AstNode.__init__(self, kid=kid)
+        self.condition = condition
+        self.message = message # This is the optional second expression
 
+    def __repr__(self) -> str:
+        """String representation."""
+        return f"SmartAssertStmt(condition={self.condition}, message={self.message})"
+
+    def normalize(self, deep: bool = False) -> bool:
+        """Normalize smart_assert statement node (for unparsing/formatting)."""
+        res = True
+        if deep:
+            res = self.condition.normalize(deep)
+            # Use self.message here
+            res = res and self.message.normalize(deep) if self.message else res
+        new_kid: list[AstNode] = [
+            self.gen_token(Tok.KW_SMART_ASSERT),
+            self.condition,
+        ]
+        # And here
+        if self.message:
+            new_kid.append(self.gen_token(Tok.COMMA))
+            new_kid.append(self.message) # Changed from self.error_msg
+        new_kid.append(self.gen_token(Tok.SEMI))
+        self.set_kids(nodes=new_kid)
+        return res
+    
 class CheckStmt(CodeBlockStmt):
     """DeleteStmt node type for Jac Ast."""
 

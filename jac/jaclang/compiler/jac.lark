@@ -138,6 +138,7 @@ statement: import_stmt
        | (yield_expr | KW_YIELD) SEMI
        | raise_stmt SEMI
        | assert_stmt SEMI
+       | smart_assert_stmt SEMI
        | check_stmt SEMI
        | assignment SEMI
        | delete_stmt SEMI
@@ -233,6 +234,9 @@ raise_stmt: KW_RAISE (expression (KW_FROM expression)?)?
 
 // Assert statements
 assert_stmt: KW_ASSERT expression (COMMA expression)?
+
+// Smart Assert statements
+smart_assert_stmt: KW_SMART_ASSERT expression (COMMA expression)?
 
 // Check statements
 check_stmt: KW_CHECK expression
@@ -512,6 +516,7 @@ KW_WALKER: "walker"
 KW_ASYNC: "async"
 KW_AWAIT: "await"
 KW_TEST: "test"
+KW_SMART_ASSERT: "smart_assert"
 KW_ASSERT: "assert"
 KW_CHECK: "check"
 KW_IF: "if"

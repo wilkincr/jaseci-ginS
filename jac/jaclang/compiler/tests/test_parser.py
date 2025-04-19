@@ -16,6 +16,13 @@ class TestLarkParser(TestCaseMicroSuite):
     def setUp(self) -> None:
         """Set up test."""
         return super().setUp()
+    
+    def test_parses_smart_assert(self) -> None:
+        """Test parsing of smart_assert."""
+        from jaclang.compiler import jac_lark as jl
+        toks = [t.name for t in jl.Lark_StandAlone().parser.lexer_conf.terminals]
+        assert "KW_SMART_ASSERT" in toks
+        print("All good!")
 
     def test_fstring_escape_brace(self) -> None:
         """Test fstring escape brace."""
