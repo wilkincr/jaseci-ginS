@@ -15,14 +15,17 @@ from jaclang.runtimelib.gins.model import Gemini
 from jaclang.runtimelib.gins.tracer import CFGTracker, CfgDeque
 from pydantic import BaseModel
 
+active_shell_ghost = None
+
 # Helper class to maintain a fixed deque size
 def read_source_code(file_path: str) -> str:
     with open(file_path, 'r') as f:
         return f.read()
 
-
 class ShellGhost:
     def __init__(self, source_file_path: str | None = None):
+        global active_shell_ghost
+        active_shell_ghost = self
         self.cfgs = None
         self.cfg_cv = threading.Condition()
         self.tracker = CFGTracker()
@@ -82,6 +85,57 @@ class ShellGhost:
         self.exception = exception
         self.finished = True
         self.finished_exception_lock.release()
+
+    def assert_smart(self, condition: bool):
+        from jaclang.runtimelib.gins.smart_assert import smart_assert
+        smart_assert(condition, model=self.model)
+    
+    def worker_update_once(self):
+        update_cfg()
+
+    def _do_cfg_update(self):
+        """
+        One pass of tracer → CFG update.
+        Mirrors the body of your old inline update_cfg closure.
+        """
+        exec_insts = self.tracker.get_exec_inst()
+        if not exec_insts or not self.cfgs:
+            return
+
+        for module, offset_list in exec_insts.items():
+            try:
+                cfg = self.cfgs[module]
+
+                # initialize per‐module state if needed
+                if not hasattr(self, "_current_bb"):
+                    self._current_bb, self._bb_entry_time = {}, {}
+                if module not in self._current_bb:
+                    self._current_bb[module]    = 0
+                    cfg.block_map.idx_to_block[0].exec_count = 1
+                    _, _, first_ts = offset_list[0]
+                    self._bb_entry_time[module] = first_ts
+
+                # walk through offsets and bump counts/times
+                for offset, _, timestamp in offset_list:
+                    curr = self._current_bb[module]
+                    if offset not in cfg.block_map.idx_to_block[curr].bytecode_offsets:
+                        for nxt in cfg.edges[curr]:
+                            if offset in cfg.block_map.idx_to_block[nxt].bytecode_offsets:
+                                elapsed = timestamp - self._bb_entry_time[module]
+                                cfg.block_map.idx_to_block[curr].total_time += elapsed
+                                cfg.edge_counts[(curr, nxt)] += 1
+                                cfg.block_map.idx_to_block[nxt].exec_count += 1
+                                self._bb_entry_time[module] = timestamp
+                                self._current_bb[module]    = nxt
+                                break
+                # push into your deque and log
+                self.update_cfg_deque(cfg.get_cfg_repr(), module)
+                self.logger.info(cfg.to_json())
+            except Exception as e:
+                self.logger.error(f"Error updating CFG for {module}: {e}")
+
+        # refresh any tracked variables
+        self.variable_values = self.tracker.get_variable_values()
 
     def annotate_source_code(self):        
         source_code = read_source_code(self.source_file_path)
@@ -394,64 +448,64 @@ class ShellGhost:
         current_executing_bbs = {}
         bb_entry_time = {}
         
-        def update_cfg():
-            exec_insts = self.tracker.get_exec_inst()
+        # def update_cfg():
+        #     exec_insts = self.tracker.get_exec_inst()
 
-            if not exec_insts:
-                return
+        #     if not exec_insts:
+        #         return
 
-            for module, offset_list in exec_insts.items():
-                try:
-                    cfg = self.cfgs[module]
+        #     for module, offset_list in exec_insts.items():
+        #         try:
+        #             cfg = self.cfgs[module]
 
-                    if module not in current_executing_bbs:
-                        current_executing_bbs[module] = 0
-                        cfg.block_map.idx_to_block[0].exec_count = 1
-                        _, _, first_time = offset_list[0]
-                        bb_entry_time[module] = first_time
+        #             if module not in current_executing_bbs:
+        #                 current_executing_bbs[module] = 0
+        #                 cfg.block_map.idx_to_block[0].exec_count = 1
+        #                 _, _, first_time = offset_list[0]
+        #                 bb_entry_time[module] = first_time
 
-                    for offset_tuple in offset_list:
-                        offset = offset_tuple[0]
-                        timestamp = offset_tuple[2]
-                        current_bb = current_executing_bbs[module]
+        #             for offset_tuple in offset_list:
+        #                 offset = offset_tuple[0]
+        #                 timestamp = offset_tuple[2]
+        #                 current_bb = current_executing_bbs[module]
 
-                        if offset not in cfg.block_map.idx_to_block[current_executing_bbs[module]].bytecode_offsets:
-                            for next_bb in cfg.edges[current_executing_bbs[module]]:
-                                if offset in cfg.block_map.idx_to_block[next_bb].bytecode_offsets:
-                                    if module in bb_entry_time:
-                                        elapsed = timestamp - bb_entry_time[module]
-                                        cfg.block_map.idx_to_block[current_bb].total_time += elapsed
-                                    else:
-                                        elapsed = 0
-                                    bb_entry_time[module] = timestamp
+        #                 if offset not in cfg.block_map.idx_to_block[current_executing_bbs[module]].bytecode_offsets:
+        #                     for next_bb in cfg.edges[current_executing_bbs[module]]:
+        #                         if offset in cfg.block_map.idx_to_block[next_bb].bytecode_offsets:
+        #                             if module in bb_entry_time:
+        #                                 elapsed = timestamp - bb_entry_time[module]
+        #                                 cfg.block_map.idx_to_block[current_bb].total_time += elapsed
+        #                             else:
+        #                                 elapsed = 0
+        #                             bb_entry_time[module] = timestamp
 
-                                    cfg.edge_counts[(current_executing_bbs[module], next_bb)] += 1
-                                    cfg.block_map.idx_to_block[next_bb].exec_count += 1
-                                    current_executing_bbs[module] = next_bb
-                                    break
+        #                             cfg.edge_counts[(current_executing_bbs[module], next_bb)] += 1
+        #                             cfg.block_map.idx_to_block[next_bb].exec_count += 1
+        #                             current_executing_bbs[module] = next_bb
+        #                             break
 
-                        assert offset in cfg.block_map.idx_to_block[current_executing_bbs[module]].bytecode_offsets
+        #                 assert offset in cfg.block_map.idx_to_block[current_executing_bbs[module]].bytecode_offsets
 
-                except Exception as e:
+        #         except Exception as e:
 
-                    print(f"Exception found: {e}")
+        #             print(f"Exception found: {e}")
                     
-                    annotated_code = self.annotate_source_code()
+        #             #annotated_code = self.annotate_source_code()
                     
-                    fix_code = self.prompt_annotated_code(annotated_code)
-                    if fix_code:
-                        self.apply_fix_to_source(fix_code["line_number"], fix_code["fix_code"])
-                        continue
-                    else:
-                        self.set_finished(e)
-                        print(e)
-                        break
+        #             # fix_code = self.prompt_annotated_code(annotated_code)
+        #             # if fix_code:
+        #             #     self.apply_fix_to_source(fix_code["line_number"], fix_code["fix_code"])
+        #             #     continue
+        #             # else:
+        #             #     self.set_finished(e)
+        #             #     print(e)
+        #             #     break
 
-            self.variable_values = self.tracker.get_variable_values()
-            # print("Updating cfg deque")
-            self.update_cfg_deque(cfg.get_cfg_repr(), module)
-            self.logger.info(cfg.to_json())
-            # print(f"CURRENT INPUTS: {self.tracker.get_inputs()}")
+        #     self.variable_values = self.tracker.get_variable_values()
+        #     # print("Updating cfg deque")
+        #     self.update_cfg_deque(cfg.get_cfg_repr(), module)
+        #     self.logger.info(cfg.to_json())
+        #     # print(f"CURRENT INPUTS: {self.tracker.get_inputs()}")
 
         self.finished_exception_lock.acquire()
         while not self.finished:
@@ -459,21 +513,29 @@ class ShellGhost:
 
             time.sleep(3)
             print("\nUpdating cfgs")
-            update_cfg()
+            self._do_cfg_update()
             self.finished_exception_lock.acquire()
 
         self.finished_exception_lock.release()
 
         print("\nUpdating cfgs at the end")
-        update_cfg()
+        self._do_cfg_update()
         #Multiple fixes needed
         # self.apply_multiple_fix_up()
 
         # One fix only 
-        annotated_code = self.annotate_source_code()
-        fix_code = self.prompt_annotated_code(annotated_code)
+        #annotated_code = self.annotate_source_code()
+        #fix_code = self.prompt_annotated_code(annotated_code)
         # if fix_code:
         #     self.apply_fix_to_source(start_line=fix_code["start_line"], end_line=fix_code["end_line"], fix_code=fix_code["fix_code"])
-
+    def worker_update_once(self):
+        """
+        Public hook: do exactly one CFG/tracer → CFG update
+        so exec_count and total_time are fresh.
+        """
+        # ensure state dicts exist
+        if not hasattr(self, "_current_bb"):
+            self._current_bb, self._bb_entry_time = {}, {}
+        self._do_cfg_update()
 
    

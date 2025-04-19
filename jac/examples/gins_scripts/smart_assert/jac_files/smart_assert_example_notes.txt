@@ -1,0 +1,34 @@
+These are explanations of the smart_assert_examples
+
+Example 1:
+    10 times it generates 6 numbers between 1 and 10 and smart_asserts
+    that at least half of the numbers are greater than 5
+
+Example 2:
+    This is a Secret Santa name matcher. Secret Santa name matching fails
+    if someone gets themself as a Secret Santa. This script uses a 
+    smart_assert to ensure a crash if this happens (which is not guaranteed).
+
+Example 3:
+    This script finds the optimal braking coefficient with the given values.
+    The assert fails since the loop checks that the round is less than 10,
+    then iterates it, and then later the assert checks that the round is 
+    still less than 10.
+
+Examples 4-7:
+    These are all a machine learning hw assignment that fits models and runs
+    analysis on a series of numbers that are hardcoded into these files.
+
+    Example 4:
+        See line 240. L is of length 10 and so the assert on line 241 will be
+        triggered when i == 10
+
+    Example 5:
+        See line 37. By only editing the first n-1 rows of Phi, the last row
+        will contain 0s so the assert on line 44 will be triggered.
+
+    Example 6:
+        See line 204. By not initializing X_train with data, the smart_assert
+        on line 16 will be triggered (multiple function calls deep).
+
+    Example 7:
