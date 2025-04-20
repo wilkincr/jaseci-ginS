@@ -168,6 +168,7 @@ class ShellGhost:
                     inserted_line_count += 2
             
                 # Now process normal source lines
+                var_printed_blocks = set()
                 for line_number in range(1, len(source_code_lines) + 1):
                     adjusted_line_idx = line_number + inserted_line_count - 1
                     
@@ -194,32 +195,33 @@ class ShellGhost:
                     if line_number in cfg.block_map.line_to_blocks and version_name in ["with_vars", "complete"]:
                         block_id = cfg.block_map.line_to_blocks[line_number]
                         # Check if we have variable information for this module and block
-                        if module in variable_tracker.variables and block_id in variable_tracker.variables[module]:
-                            var_dict = variable_tracker.variables[module][block_id]
+                        if block_id not in var_printed_blocks:
+                            var_dict = variable_tracker.variables.get(module, {}).get(block_id, {})
                             if var_dict:
-                                # Calculate appropriate line index based on whether instructions were inserted
+                                # compute where to insert, indent, etc.
                                 var_line_idx = adjusted_line_idx + 1
                                 if version_name == "complete" and line_number in instr_line_map:
                                     var_line_idx += 1
-                                    
-                                # Calculate indent based on the appropriate previous line
-                                indent = len(versions[version_name][var_line_idx - 1]) - len(versions[version_name][var_line_idx - 1].lstrip())
-                                
-                                # Build the variable values string
-                                var_values_parts = []
+
+                                indent = len(versions[version_name][var_line_idx - 1]) \
+                                        - len(versions[version_name][var_line_idx - 1].lstrip())
+
+                                parts = []
                                 for var_name, val_counts in var_dict.items():
                                     top_vals = sorted(val_counts.items(), key=lambda x: -x[1])[:variable_tracker.top_k]
                                     for val, freq in top_vals:
-                                        var_values_parts.append(f"{var_name} = {val} (seen {freq}×)")
-                                
-                                # Create the single line with all variable information
-                                if var_values_parts:
-                                    var_line = " " * indent + "#   Variable values in this block:   " + "  ".join(var_values_parts)
-                                    versions[version_name].insert(var_line_idx, var_line)
-                                    inserted_line_count += 1
-            
-            # Save all versions to appropriate files
-            base_output_path = self.source_file_path
+                                        parts.append(f"{var_name} = {val} (seen {freq}×)")
+
+                                var_line = " " * indent \
+                                        + "#   Variable values in this block:   " \
+                                        + "  ".join(parts)
+                                versions[version_name].insert(var_line_idx, var_line)
+                                inserted_line_count += 1
+
+                                # mark done so we don’t print again
+                                var_printed_blocks.add(block_id)
+                                # Save all versions to appropriate files
+                                base_output_path = self.source_file_path
             
             for version_name, annotated_lines in versions.items():
                 annotated_code = "\n".join(annotated_lines)
