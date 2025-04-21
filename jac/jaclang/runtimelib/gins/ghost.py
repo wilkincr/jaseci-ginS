@@ -96,7 +96,7 @@ class ShellGhost:
             "with_vars": list(source_code_lines),          # With variable values
             "complete": list(source_code_lines)            # With all annotations
         }
-        
+        base_output_path = self.source_file_path
         bb_runtime_map = {}   # bb_id -> (exec_count, total_time)
         instr_line_map = defaultdict(list)  # line_number -> [instruction strings]
         
@@ -221,7 +221,6 @@ class ShellGhost:
                                 # mark done so we don’t print again
                                 var_printed_blocks.add(block_id)
                                 # Save all versions to appropriate files
-                                base_output_path = self.source_file_path
             
             for version_name, annotated_lines in versions.items():
                 annotated_code = "\n".join(annotated_lines)
@@ -419,9 +418,9 @@ class ShellGhost:
         for cfg in self.cfgs.values():
             print(cfg.get_cfg_repr())
         
-        for module, cfg in self.cfgs.items():
-            self.annotate_source_code()
-            variable_tracker = VariableTracker(self.tracker.get_variable_values(), cfg.block_map.line_to_blocks)
+        # for module, cfg in self.cfgs.items():
+        self.annotate_source_code()
+            # variable_tracker = VariableTracker(self.tracker.get_variable_values(), cfg.block_map.line_to_blocks)
 
 
 

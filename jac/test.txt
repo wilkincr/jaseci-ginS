@@ -1560,3 +1560,92 @@
 2025-04-19 16:40:50 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 1, 'freq': 1}]}, {'bb_id': 1, 'freq': 50, 'predicted_edges': [{'edge_to_bb_id': 4, 'freq': 0}, {'edge_to_bb_id': 3, 'freq': 0}, {'edge_to_bb_id': 2, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 4, 'freq': 1}, {'edge_to_bb_id': 3, 'freq': 48}, {'edge_to_bb_id': 2, 'freq': 1}]}, {'bb_id': 2, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 1, 'freq': 1}]}, {'bb_id': 3, 'freq': 48, 'predicted_edges': [{'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 1, 'freq': 48}]}, {'bb_id': 4, 'freq': 1, 'predicted_edges': [], 'actual_edges': []}]}
 2025-04-19 16:41:08 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 1, 'freq': 1}]}, {'bb_id': 1, 'freq': 50, 'predicted_edges': [{'edge_to_bb_id': 4, 'freq': 0}, {'edge_to_bb_id': 3, 'freq': 0}, {'edge_to_bb_id': 2, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 4, 'freq': 1}, {'edge_to_bb_id': 3, 'freq': 48}, {'edge_to_bb_id': 2, 'freq': 1}]}, {'bb_id': 2, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 1, 'freq': 1}]}, {'bb_id': 3, 'freq': 48, 'predicted_edges': [{'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 1, 'freq': 48}]}, {'bb_id': 4, 'freq': 1, 'predicted_edges': [], 'actual_edges': []}]}
 2025-04-19 16:45:55 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 1, 'freq': 1}]}, {'bb_id': 1, 'freq': 50, 'predicted_edges': [{'edge_to_bb_id': 4, 'freq': 0}, {'edge_to_bb_id': 3, 'freq': 0}, {'edge_to_bb_id': 2, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 4, 'freq': 1}, {'edge_to_bb_id': 3, 'freq': 48}, {'edge_to_bb_id': 2, 'freq': 1}]}, {'bb_id': 2, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 1, 'freq': 1}]}, {'bb_id': 3, 'freq': 48, 'predicted_edges': [{'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 1, 'freq': 48}]}, {'bb_id': 4, 'freq': 1, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-20 20:35:24 - /root/jaseci-ginS/jac/examples/final_test_cases/slides_example/example.jac:1:1 Deprecated syntax, use braces for multiple imports (e.g, import from mymod {a, b, c})
+2025-04-20 20:35:24 - No module named 'jaclang.runtimelib.gins.smart_assert'
+2025-04-20 20:35:24 - Error: No module named 'jaclang.runtimelib.gins.smart_assert'
+
+  at _find_and_load_unlocked() <frozen importlib._bootstrap>:1324
+  at _find_and_load() <frozen importlib._bootstrap>:1360
+  at _gcd_import() <frozen importlib._bootstrap>:1387
+  at import_module() /usr/lib/python3.12/importlib/__init__.py:90
+  at run_import() /root/jaseci-ginS/jac/jaclang/runtimelib/importer.py:212
+  at run_import() /root/jaseci-ginS/jac/jaclang/runtimelib/importer.py:256
+  at jac_import() /root/jaseci-ginS/jac/jaclang/plugin/default.py:805
+  at _multicall() /root/jaseci-ginS/jac/jaclang/vendor/pluggy/_callers.py:103
+  at _multicall() /root/jaseci-ginS/jac/jaclang/vendor/pluggy/_callers.py:139
+  at _hookexec() /root/jaseci-ginS/jac/jaclang/vendor/pluggy/_manager.py:120
+  at __call__() /root/jaseci-ginS/jac/jaclang/vendor/pluggy/_hooks.py:513
+  at jac_import() /root/jaseci-ginS/jac/jaclang/plugin/feature.py:342
+  at <module> /root/jaseci-ginS/jac/examples/final_test_cases/slides_example/example.jac:1
+2025-04-20 20:35:27 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 1}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 1, 'freq': 0, 'predicted_edges': [{'edge_to_bb_id': 3, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 3, 'freq': 0}]}, {'bb_id': 2, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 3, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 3, 'freq': 0}]}, {'bb_id': 3, 'freq': 0, 'predicted_edges': [{'edge_to_bb_id': 4, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 4, 'freq': 0}]}, {'bb_id': 4, 'freq': 0, 'predicted_edges': [{'edge_to_bb_id': 5, 'freq': 0}, {'edge_to_bb_id': 4, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 5, 'freq': 0}, {'edge_to_bb_id': 4, 'freq': 0}]}, {'bb_id': 5, 'freq': 0, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-20 20:35:34 - name 'smart_assert' is not defined
+2025-04-20 20:35:34 - Error: name 'smart_assert' is not defined
+    7 |     }
+    8 | 
+    9 |     smart_assert(x != 0, 'test') ;    
+      |     ^^^^^^^^^^^^
+   10 |     
+   11 |     y = (1 / x);
+  at <module> /root/jaseci-ginS/jac/examples/final_test_cases/slides_example/example.jac:9
+2025-04-20 20:35:37 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 1, 'freq': 1}]}, {'bb_id': 1, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 1}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 2, 'freq': 1, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-20 20:36:23 - division by zero
+2025-04-20 20:36:23 - Error: division by zero
+    7 |     }
+    8 |     
+    9 |     y = (1 / x);
+      |          ^^^^^
+   10 | }
+   11 | 
+  at <module> /root/jaseci-ginS/jac/examples/final_test_cases/slides_example/example.jac:9
+2025-04-20 20:36:26 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 1, 'freq': 1}]}, {'bb_id': 1, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 1}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 2, 'freq': 1, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-20 20:37:27 - division by zero
+2025-04-20 20:37:27 - Error: division by zero
+    7 |     }
+    8 |     
+    9 |     y = (1 / x);
+      |          ^^^^^
+   10 | }
+   11 | 
+  at <module> /root/jaseci-ginS/jac/examples/final_test_cases/slides_example/example.jac:9
+2025-04-20 20:37:30 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 1, 'freq': 1}]}, {'bb_id': 1, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 1}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 2, 'freq': 1, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-20 20:39:19 - division by zero
+2025-04-20 20:39:19 - Error: division by zero
+    7 |     }
+    8 |     
+    9 |     y = (1 / x);
+      |          ^^^^^
+   10 | }
+   11 | 
+  at <module> /root/jaseci-ginS/jac/examples/final_test_cases/slides_example/example.jac:9
+2025-04-20 20:39:22 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 1, 'freq': 1}]}, {'bb_id': 1, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 1}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 2, 'freq': 1, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-20 20:44:14 - division by zero
+2025-04-20 20:44:14 - Error: division by zero
+    7 |     }
+    8 |     
+    9 |     y = (1 / x);
+      |          ^^^^^
+   10 | }
+   11 | 
+  at <module> /root/jaseci-ginS/jac/examples/final_test_cases/slides_example/example.jac:9
+2025-04-20 20:44:17 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 1, 'freq': 1}]}, {'bb_id': 1, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 1}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 2, 'freq': 1, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-20 20:44:55 - division by zero
+2025-04-20 20:44:55 - Error: division by zero
+    7 |     }
+    8 |     
+    9 |     y = (1 / x);
+      |          ^^^^^
+   10 | }
+   11 | 
+  at <module> /root/jaseci-ginS/jac/examples/final_test_cases/slides_example/example.jac:9
+2025-04-20 20:44:58 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 1, 'freq': 1}]}, {'bb_id': 1, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 1}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 2, 'freq': 1, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-20 20:45:55 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 1, 'freq': 1}]}, {'bb_id': 1, 'freq': 50, 'predicted_edges': [{'edge_to_bb_id': 4, 'freq': 0}, {'edge_to_bb_id': 3, 'freq': 0}, {'edge_to_bb_id': 2, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 4, 'freq': 1}, {'edge_to_bb_id': 3, 'freq': 48}, {'edge_to_bb_id': 2, 'freq': 1}]}, {'bb_id': 2, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 1, 'freq': 1}]}, {'bb_id': 3, 'freq': 48, 'predicted_edges': [{'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 1, 'freq': 48}]}, {'bb_id': 4, 'freq': 1, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-20 20:46:35 - division by zero
+2025-04-20 20:46:35 - Error: division by zero
+    8 |     }
+    9 |     
+   10 |     y = (1 / x);
+      |          ^^^^^
+   11 | }
+   12 | 
+  at <module> /root/jaseci-ginS/jac/examples/final_test_cases/slides_example/example.jac:10
+2025-04-20 20:46:38 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 1, 'freq': 1}]}, {'bb_id': 1, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 1}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 2, 'freq': 1, 'predicted_edges': [], 'actual_edges': []}]}
