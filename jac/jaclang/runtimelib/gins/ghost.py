@@ -133,39 +133,12 @@ class ShellGhost:
             # Create the variable tracker to access variable information per block
             variable_tracker = VariableTracker(self.tracker.get_variable_values(),
                                             cfg.block_map.line_to_blocks)
+            print("BBRUNTIME_MAP", bb_runtime_map)
             
             # Process each version with appropriate annotations
             for version_name in versions:
                 current_bb = -1
                 inserted_line_count = 0  # Track how many lines we've inserted for correct positioning
-                
-                # First, handle any special blocks with no line numbers
-                special_blocks = [key for key in instr_line_map.keys() if isinstance(key, str) and key.startswith("block_")]
-                if special_blocks and version_name in ["complete"]:
-                    # Add a section at the top for instructions without line mappings
-                    versions[version_name].insert(0, "# ==== INSTRUCTIONS WITHOUT LINE MAPPINGS ====")
-                    inserted_line_count += 1
-                    
-                    for block_key in special_blocks:
-                        block_id = int(block_key.split('_')[1])
-                        execution_freq, execution_time = bb_runtime_map[block_id]
-                        
-                        block_header = f"# BB: {block_id} Execution frequency: {execution_freq} Total execution time: {execution_time:.3f} ms"
-                        versions[version_name].insert(inserted_line_count, block_header)
-                        inserted_line_count += 1
-                        
-                        instr_line = f"#   Instructions: [{', '.join(instr_line_map[block_key])}]"
-                        versions[version_name].insert(inserted_line_count, instr_line)
-                        inserted_line_count += 1
-                        
-                        # Add empty line for readability
-                        versions[version_name].insert(inserted_line_count, "")
-                        inserted_line_count += 1
-                    
-                    # Add separator after special blocks section
-                    versions[version_name].insert(inserted_line_count, "# " + "=" * 50)
-                    versions[version_name].insert(inserted_line_count + 1, "")
-                    inserted_line_count += 2
             
                 # Now process normal source lines
                 var_printed_blocks = set()
@@ -402,23 +375,22 @@ class ShellGhost:
             self.logger.info(cfg.to_json())
             # print(f"CURRENT INPUTS: {self.tracker.get_inputs()}")
 
-        self.finished_exception_lock.acquire()
-        while not self.finished:
-            self.finished_exception_lock.release()
+        # self.finished_exception_lock.acquire()
+        # while not self.finished:
+        #     self.finished_exception_lock.release()
 
-            time.sleep(3)
-            print("\nUpdating cfgs")
-            update_cfg()
-            self.finished_exception_lock.acquire()
+        #     time.sleep(3)
+        #     print("\nUpdating cfgs")
+        #     update_cfg()
+        #     self.finished_exception_lock.acquire()
 
-        self.finished_exception_lock.release()
+        # self.finished_exception_lock.release()
 
         print("\nUpdating cfgs at the end")
         update_cfg()
         for cfg in self.cfgs.values():
             print(cfg.get_cfg_repr())
         
-        # for module, cfg in self.cfgs.items():
         self.annotate_source_code()
             # variable_tracker = VariableTracker(self.tracker.get_variable_values(), cfg.block_map.line_to_blocks)
 
