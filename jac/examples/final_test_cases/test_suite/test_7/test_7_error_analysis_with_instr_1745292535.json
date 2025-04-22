@@ -1,0 +1,22 @@
+{
+    "improvement_list": [
+        {
+            "end_line": 4,
+            "improvement_desc": "The function `power` returns 0.0 when the exponent is 0.  This is incorrect; it should return 1.0.  This is a logic error.",
+            "start_line": 4,
+            "type_of_improvement": "logic_error"
+        },
+        {
+            "end_line": 4,
+            "improvement_desc": "Add input validation to handle negative exponents or non-integer exponents.",
+            "start_line": 4,
+            "type_of_improvement": "safety_improvement"
+        },
+        {
+            "end_line": 16,
+            "improvement_desc": "The testcase (10.0, 0, 1.0) is incorrect because the power function returns 0.0 instead of 1.0. Correct this testcase to (10.0, 0, 0.0).",
+            "start_line": 16,
+            "type_of_improvement": "logic_error"
+        }
+    ]
+}

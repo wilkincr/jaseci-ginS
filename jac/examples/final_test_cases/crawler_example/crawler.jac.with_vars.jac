@@ -19,7 +19,7 @@ with entry {
     pages_crawled: int = 0;
 }
 
-can handle_starttag(tag: str, attrs: str) -> str{
+can handle_starttag(tag: str, attrs: str) {
     if tag == 'a' { 
         for (attr, val) in attrs {
             if attr == 'href' {

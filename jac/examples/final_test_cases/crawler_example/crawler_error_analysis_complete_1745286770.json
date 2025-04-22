@@ -1,0 +1,46 @@
+{
+    "improvement_list": [
+        {
+            "end_line": 22,
+            "improvement_desc": "The urlopen function in line 22 might throw exceptions, such as URLError or HTTPError, if the URL is invalid or the server is unreachable.  Consider wrapping the call to urlopen in a try-except block to handle these exceptions gracefully.",
+            "start_line": 22,
+            "type_of_improvement": "safety"
+        },
+        {
+            "end_line": 24,
+            "improvement_desc": "The response.read() method in line 24 might throw an exception if the response is empty or if there is a problem reading from the response. Consider adding a check for an empty response before calling response.read().",
+            "start_line": 24,
+            "type_of_improvement": "safety"
+        },
+        {
+            "end_line": 25,
+            "improvement_desc": "In line 25, urljoin can potentially produce unexpected URLs if the inputs are malformed.  Validate both `url` and `link` before using them with urljoin. This validation could involve checking the format of the URLs and/or employing stricter validation for the `link` variable before appending to the queue.",
+            "start_line": 25,
+            "type_of_improvement": "safety"
+        },
+        {
+            "end_line": 27,
+            "improvement_desc": "The depth is decremented by 1 in line 27 before being added to the queue, consider adding a check to prevent going below 0.",
+            "start_line": 27,
+            "type_of_improvement": "safety"
+        },
+        {
+            "end_line": 17,
+            "improvement_desc": "The continue statement in line 19 could be simplified, combining the condition within a single if statement.",
+            "start_line": 17,
+            "type_of_improvement": "performance"
+        },
+        {
+            "end_line": 23,
+            "improvement_desc": "The continue statement in line 23 could be simplified, combining the condition within a single if statement.",
+            "start_line": 23,
+            "type_of_improvement": "performance"
+        },
+        {
+            "end_line": 20,
+            "improvement_desc": "The pages_crawled variable is checked against 5 in line 20 but the print statement says 10 pages.  This is inconsistent. Correct the limit or the print message. ",
+            "start_line": 20,
+            "type_of_improvement": "logic"
+        }
+    ]
+}

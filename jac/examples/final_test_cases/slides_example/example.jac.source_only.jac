@@ -1,6 +1,6 @@
 with entry {
-    x = 10;
-    y = 0;    
+    x:int = 10;
+    y:int = 0;    
     for i in range(10) {
         x = (x - 1);
         if (x > 0) {

@@ -1,0 +1,22 @@
+{
+    "improvement_list": [
+        {
+            "end_line": 4,
+            "improvement_desc": "The second loop starting on line 4 is unreachable because its condition is always false. The variable 'm' is always 7 and the loop iterates only if 'i' is in range(m), thus the condition 'i<7' which is always true will always lead to the inner loop that will never be executed.",
+            "start_line": 4,
+            "type_of_improvement": "unreachable_code"
+        },
+        {
+            "end_line": 10,
+            "improvement_desc": "The loop starting at line 10 has a similar issue. Due to the initialization of 'i' to 'm' and 'j' to 'n', the condition 'i > 0 and j > 0' will be false, making the block unreachable.",
+            "start_line": 10,
+            "type_of_improvement": "unreachable_code"
+        },
+        {
+            "end_line": 20,
+            "improvement_desc": "The print statement on line 20 will never be executed since the preceding loop is unreachable. ",
+            "start_line": 20,
+            "type_of_improvement": "unreachable_code"
+        }
+    ]
+}

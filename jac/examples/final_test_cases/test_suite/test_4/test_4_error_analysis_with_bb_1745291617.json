@@ -1,0 +1,22 @@
+{
+    "improvement_list": [
+        {
+            "end_line": 5,
+            "improvement_desc": "The `key` function in `sorted` might raise a `ZeroDivisionError` if any `weights[i]` is zero.  Add a check to handle this case.  Also, it is generally good practice to validate input lists to ensure that they are of the same length and that weights are all non-negative.",
+            "start_line": 4,
+            "type_of_improvement": "safety"
+        },
+        {
+            "end_line": 16,
+            "improvement_desc": "The variable `capacity` is declared as a list, but it's used as a scalar integer in the knapsack function. This is a type mismatch. Change `capacity` declaration to `int`.",
+            "start_line": 15,
+            "type_of_improvement": "runtime_error"
+        },
+        {
+            "end_line": 16,
+            "improvement_desc": "The function `knapsack` is called with a list (capacity) instead of an integer. This will cause a runtime error in `cap -= weights[i]` since `cap` is of type float and `weights[i]` is of type float.",
+            "start_line": 16,
+            "type_of_improvement": "runtime_error"
+        }
+    ]
+}
