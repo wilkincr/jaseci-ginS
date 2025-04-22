@@ -1,8 +1,7 @@
 import:py from jaclang.runtimelib.gins.smart_assert, smart_assert ;
-import:py math;
+import:py math ;
 
 can is_prime(n: Any) {
-
     if n < 2 {
 
         return False ;
