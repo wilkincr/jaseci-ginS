@@ -211,12 +211,18 @@
 %% The abstract is a short summary of the work to be presented in the
 %% article.
 \begin{abstract}
-  A clear and well-documented \LaTeX\ document is presented as an
-  article formatted for publication by ACM in a conference proceedings
-  or journal publication. Based on the ``acmart'' document class, this
-  article presents and explains many of the common variations, as well
-  as many of the formatting elements an author may use in the
-  preparation of the documentation of their work.
+  Large language models (LLMs) have become an increasingly popular tool for developers to develop and debug programs. 
+  However, for complex programs it is hard for LLMs to identify failures or areas for improvement solely using source code as input.
+  Adding runtime information to prompts can improve the quality of LLMs' responses, but this requires significant developer
+  time to parse logs. 
+  To increase LLM effectiveness and improve ease of use for developers, we present the framework Ghost in the Shell (GinS).
+  GinS runs in a thread along an application and collects runtime information, which is then used to automatically 
+  construct effective prompts for an LLM.
+  LLM analysis can be provided upon program termination, or can be triggered automatically using our novel extension of the existing
+  "assert" debugging tool, the smart assert. A developer can insert smart asserts into their code to automatically trigger LLM analysis
+  upon assert failure of how the program's runtime behavior caused that assert to fail. [insert more about evaluation]
+
+
 \end{abstract}
 
 %%
