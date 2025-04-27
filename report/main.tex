@@ -221,8 +221,6 @@
   LLM analysis can be provided upon program termination, or can be triggered automatically using our novel extension of the existing
   "assert" debugging tool, the smart assert. A developer can insert smart asserts into their code to automatically trigger LLM analysis
   upon assert failure of how the program's runtime behavior caused that assert to fail. [insert more about evaluation]
-
-
 \end{abstract}
 
 %%
@@ -276,13 +274,18 @@
 \maketitle
 
 \section{Introduction}
-Papers do not have any fixed sections names. Three levels of heading are supported in ACM papers.
-
-A test reference of Bush's `As We May Think' \cite{bush:1945:awmt}, to indicate how references are set up.
-
-There is no need to save this file when editing as Overleaf auto-saves the document. Use the green `Recompile' button in the upper menu bar to show or refresh the PDF. The output PDF is not saved into the project but can be downloaded, for reading outside overleaf, using a button at the right-hand end of the Overleaf menu-bar. To download the project files, use the home button in the menu bar to exit the project. Download options are available in your project listing.
-
-Depending on your type of Overleaf account you will be able to share access with fellow authors---see Overleaf's documentation for details. Shared access also allows for leaving comments in the project.
+Large Language Models (LLMs) have rapidly become a powerful aid for developers seeking assistance with coding, debugging, and software analysis. 
+Recent advancements have shown that LLMs are highly capable of understanding source code and suggesting improvements. 
+However, for complex or dynamic software systems, source code alone often lacks sufficient context for effective diagnosis or optimization. 
+Developers must typically invest significant time parsing runtime logs and program outputs to supply an LLM with the additional information needed for high-quality feedback.
+This reliance on manual log interpretation presents a major bottleneck: while LLMs offer potential to accelerate debugging and program comprehension, the overhead of preparing detailed runtime information can outweigh their benefits. 
+Bridging this gap between static code and dynamic behavior remains an open challenge in improving LLM effectiveness for real-world software development tasks.
+To address this, we present Ghost in the Shell (GinS), a lightweight framework designed to streamline and automate the integration of runtime data into LLM-assisted workflows. 
+GinS operates alongside a target application, continuously collecting relevant runtime information in a non-intrusive thread. 
+Upon program termination—or triggered dynamically during execution via our novel smart assert extension—GinS compiles the collected data into rich, targeted prompts for LLMs. 
+These prompts enable significantly more accurate and actionable analysis without requiring manual effort from the developer.
+Our smart assert mechanism extends traditional assertion tools by not only detecting program failures, but also automatically capturing the runtime state that contributed to the failure. This allows LLMs to provide immediate, context-sensitive feedback on the causes of runtime errors, making debugging faster and more intuitive.
+Through evaluation across [insert a short preview of your evaluation here — e.g., benchmarks, case studies, examples], we demonstrate that GinS improves the quality of LLM responses, reduces developer workload, and integrates naturally into existing development practices.
 
 \subsection{Do Not Remove Boilerplate Code}
 The TEX document includes code to generate sections such as the the copyright block. Do not remove these. Authors of accepted papers will receive sections of code to replace these and customise the final paper accordingly.

@@ -2,7 +2,7 @@
 %%% Do NOT edit. File created by BibTeX with style
 %%% ACM-Reference-Format-Journals [18-Jan-2012].
 
-\begin{thebibliography}{1}
+\begin{thebibliography}{0}
 
 %%% ====================================================================
 %%% NOTE TO THE USER: you can override these defaults by providing
@@ -36,10 +36,5 @@
 \providecommand\bibinfo[2]{#2}
 \providecommand\natexlab[1]{#1}
 \providecommand\showeprint[2][]{arXiv:#2}
-
-\bibitem[The Atlantic(1945)]%
-        {bush:1945:awmt}
-The Atlantic \bibinfo{year}{1945}\natexlab{}. \showarticletitle{As We May Think}.
-\newblock \bibinfo{journal}{\emph{The Atlantic Monthly}} \bibinfo{volume}{176}, \bibinfo{number}{1} (\bibinfo{year}{1945}), \bibinfo{numpages}{101--108}~pages.
 
 \end{thebibliography}
