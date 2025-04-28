@@ -21,13 +21,35 @@ with entry {
     for i in range(len(test_lists)) {
         lists: list[list[int]] = test_lists[i];
         solution: list[int] = test_solutions[i];
+
         merged: list[int] = [];
 
-        for lst in lists {
-            merged: list[int] = merged + lst;
+        pointers: list[int] = [];
+        for _ in range(len(lists)) {
+            pointers.append(0);
         }
 
-        merged.sort();
+        while True {
+            min_val: int = 2147483647;
+            min_idx: int = -1;
+
+            for j in range(len(lists)) {
+                if pointers[j] < len(lists[j]) {
+                    if lists[j][pointers[j]] < min_val {
+                        min_val:int = lists[j][pointers[j]];
+                        min_idx:int = j;
+                    }
+                }
+            }
+
+            if min_idx == -1 {
+                break;
+            }
+
+            merged.append(min_val);
+            pointers[min_idx] += 1;
+        }
+
         print(merged == solution);
     }
 }
