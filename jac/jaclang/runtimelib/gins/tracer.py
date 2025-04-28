@@ -116,8 +116,7 @@ class CFGTracker:
                 break
             current_line = line
         return current_line
-    
-    
+
     def trace_callback(
         self, frame: types.FrameType, event: str, arg: any
     ) -> Optional[Callable]:
@@ -145,26 +144,35 @@ class CFGTracker:
                 self.executed_insts[module].append((frame.f_lasti, line_no, time.time()))
 
             # 2) Track variables
+            # 2) Track variables
+            # 2) Track variables
+            # 2) Track variables
+            # 2) Track variables
             if "__annotations__" in frame.f_locals:
                 with self.curr_variables_lock:
-                    
                     lineno = frame.f_lineno
                     if lineno != self.curr_line and lineno is not None:
                         for var_name in frame.f_locals["__annotations__"]:
-                        # capture input if changed
-                            if var_name == "input_val":
-                                if not self.inputs or frame.f_locals[var_name] != self.inputs[-1]:
-                                    self.inputs.append(frame.f_locals[var_name])
-                        # keys are (module, line_no, var_name), value is frequency
-                            variable_value = frame.f_locals[var_name]
-                            if isinstance(variable_value, (list, set, dict)):
-                                continue
+                            # Make sure the variable exists in local scope
+                            if var_name in frame.f_locals:
+                                variable_value = frame.f_locals[var_name]
+                                
+                                # Handle input tracking
+                                if var_name == "input_val":
+                                    current_input = copy.deepcopy(variable_value)
+                                    if not self.inputs or current_input != self.inputs[-1]:
+                                        self.inputs.append(current_input)
+                                
+                                # Store the value as a string representation
+                                value_str = repr(variable_value)
+                                
+                                # Track the frequency using the string representation
+                                self.curr_variables[module][lineno][var_name][value_str] += 1
+                        
+                        # Update current line after processing all variables
+                        self.curr_line = lineno
 
-                            self.curr_variables[module][lineno][var_name][variable_value] += 1
-                            # print(self.curr_variables[module][lineno][var_name])
-                            self.curr_line = lineno
-            
-            
+
             # 3) [NEW] Memory usage with tracemalloc
             #    - Here we do it for every opcode, but for performance you might do every Nth
             self._opcode_count += 1

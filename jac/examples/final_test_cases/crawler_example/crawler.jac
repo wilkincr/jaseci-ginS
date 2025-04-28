@@ -30,7 +30,7 @@ can handle_starttag(tag: str, attrs: str) -> str{
 }
 
 with entry {
-    parser.handle_starttag = handle_starttag;
+    parser.handle_starttag:str = handle_starttag;
 
     while queue {
         (url, depth) = queue.pop(0);
