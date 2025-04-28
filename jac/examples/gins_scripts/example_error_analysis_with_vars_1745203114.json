@@ -1,0 +1,22 @@
+{
+    "improvement_list": [
+        {
+            "end_line": 8,
+            "improvement_desc": "Division by zero is possible if y becomes zero. Add a check to handle this scenario.",
+            "start_line": 8,
+            "type_of_improvement": "safety improvement"
+        },
+        {
+            "end_line": 8,
+            "improvement_desc": "The result of x/y is assigned to z. This is a potential source of runtime error. The type of x and y are integer while z can be a floating point number.",
+            "start_line": 8,
+            "type_of_improvement": "runtime error"
+        },
+        {
+            "end_line": 7,
+            "improvement_desc": "The loop iterates 49 times. The value of x is decremented each time.  The value of x will be -49 at the end of the loop.",
+            "start_line": 4,
+            "type_of_improvement": "control flow oddities"
+        }
+    ]
+}

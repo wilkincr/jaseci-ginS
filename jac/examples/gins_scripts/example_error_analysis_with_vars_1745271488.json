@@ -1,0 +1,22 @@
+{
+    "improvement_list": [
+        {
+            "end_line": 10,
+            "improvement_desc": "Potential division by zero error.  The value of y can become 0 inside the loop if x is odd.  Add a check to avoid division by zero before line 10. ",
+            "start_line": 10,
+            "type_of_improvement": "safety improvement"
+        },
+        {
+            "end_line": 9,
+            "improvement_desc": "The loop always runs 49 times. The variable x will always become negative.  Consider adding a check or modifying the loop condition. ",
+            "start_line": 4,
+            "type_of_improvement": "logic bug"
+        },
+        {
+            "end_line": 6,
+            "improvement_desc": "Unnecessary computation in the loop; x is decremented unconditionally, then checked for even/odd.  This does not affect the final result, and so can be optimized.",
+            "start_line": 4,
+            "type_of_improvement": "performance improvement"
+        }
+    ]
+}

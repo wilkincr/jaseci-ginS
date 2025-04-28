@@ -1,0 +1,22 @@
+{
+    "improvement_list": [
+        {
+            "end_line": 8,
+            "improvement_desc": "Division by zero.  The variable x is decremented to 0 in the for loop, leading to a division by zero error on line 8.",
+            "start_line": 8,
+            "type_of_improvement": "runtime_error"
+        },
+        {
+            "end_line": 7,
+            "improvement_desc": "The loop decrements x until it becomes 0.  This is likely a logic error, the intention might be to ensure x is never 0 before the division.",
+            "start_line": 4,
+            "type_of_improvement": "logic_bug"
+        },
+        {
+            "end_line": 8,
+            "improvement_desc": "Add a check to ensure x is not 0 before performing the division.  For example: if (x != 0) { y = (1 / x); } else { handle_error(); }",
+            "start_line": 8,
+            "type_of_improvement": "safety_improvement"
+        }
+    ]
+}

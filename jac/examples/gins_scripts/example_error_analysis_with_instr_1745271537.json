@@ -1,0 +1,16 @@
+{
+    "improvement_list": [
+        {
+            "end_line": 16,
+            "improvement_desc": "Potential division by zero error in z = x / y. Add a check to ensure y is not zero before the division.  Consider using a ternary operator or if statement to handle this case gracefully. ",
+            "start_line": 16,
+            "type_of_improvement": "safety"
+        },
+        {
+            "end_line": 10,
+            "improvement_desc": "Unreachable code: The `else` block in the `if x % 2` statement will never be reached because the modulo operation in the condition always produces either 0 or 1.  This results in either y = 0 or y = 4, implying that the else path will not execute. ",
+            "start_line": 10,
+            "type_of_improvement": "logic_error"
+        }
+    ]
+}

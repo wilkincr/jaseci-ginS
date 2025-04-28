@@ -1,0 +1,71 @@
+2025-04-20 22:25:51 - division by zero
+2025-04-20 22:25:51 - Error: division by zero
+    8 |     }
+    9 |     
+   10 |     y = (1 / x);
+      |          ^^^^^
+   11 | }
+   12 | 
+  at <module> /home/connorwilkinson11/UMich/jaseci-ginS/jac/examples/final_test_cases/slides_example/example.jac:10
+2025-04-20 22:25:54 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 1, 'freq': 1}]}, {'bb_id': 1, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 1}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 2, 'freq': 1, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-20 22:26:20 - division by zero
+2025-04-20 22:26:20 - Error: division by zero
+    8 |     }
+    9 |     
+   10 |     y = (1 / x);
+      |          ^^^^^
+   11 | }
+   12 | 
+  at <module> /home/connorwilkinson11/UMich/jaseci-ginS/jac/examples/final_test_cases/slides_example/example.jac:10
+2025-04-20 22:26:23 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 1, 'freq': 1}]}, {'bb_id': 1, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 1}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 2, 'freq': 1, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-20 22:31:54 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 1, 'freq': 1}]}, {'bb_id': 1, 'freq': 50, 'predicted_edges': [{'edge_to_bb_id': 4, 'freq': 0}, {'edge_to_bb_id': 3, 'freq': 0}, {'edge_to_bb_id': 2, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 4, 'freq': 1}, {'edge_to_bb_id': 3, 'freq': 48}, {'edge_to_bb_id': 2, 'freq': 1}]}, {'bb_id': 2, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 1, 'freq': 1}]}, {'bb_id': 3, 'freq': 48, 'predicted_edges': [{'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 1, 'freq': 48}]}, {'bb_id': 4, 'freq': 1, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-20 22:34:01 - division by zero
+2025-04-20 22:34:01 - Error: division by zero
+    6 |     }
+    7 |     
+    8 |     y = (1 / x);
+      |          ^^^^^
+    9 | }
+   10 | 
+  at <module> /home/connorwilkinson11/UMich/jaseci-ginS/jac/examples/final_test_cases/slides_example/example.jac:8
+2025-04-20 22:34:04 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 1, 'freq': 1}]}, {'bb_id': 1, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 1}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 2, 'freq': 1, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-20 22:34:54 - division by zero
+2025-04-20 22:34:54 - Error: division by zero
+    6 |     }
+    7 |     
+    8 |     y = (1 / x);
+      |          ^^^^^
+    9 | }
+   10 | 
+  at <module> /home/connorwilkinson11/UMich/jaseci-ginS/jac/examples/final_test_cases/slides_example/example.jac:8
+2025-04-20 22:34:57 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 1, 'freq': 1}]}, {'bb_id': 1, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 1}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 2, 'freq': 1, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-20 22:35:23 - division by zero
+2025-04-20 22:35:23 - Error: division by zero
+    6 |     }
+    7 |     
+    8 |     y = (1 / x);
+      |          ^^^^^
+    9 | }
+   10 | 
+  at <module> /home/connorwilkinson11/UMich/jaseci-ginS/jac/examples/final_test_cases/slides_example/example.jac:8
+2025-04-20 22:35:26 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 1, 'freq': 1}]}, {'bb_id': 1, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 1}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 2, 'freq': 1, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-20 22:35:49 - division by zero
+2025-04-20 22:35:49 - Error: division by zero
+    6 |     }
+    7 |     
+    8 |     y = (1 / x);
+      |          ^^^^^
+    9 | }
+   10 | 
+  at <module> /home/connorwilkinson11/UMich/jaseci-ginS/jac/examples/final_test_cases/slides_example/example.jac:8
+2025-04-20 22:35:52 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 1, 'freq': 1}]}, {'bb_id': 1, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 1}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 2, 'freq': 1, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-20 22:36:15 - division by zero
+2025-04-20 22:36:15 - Error: division by zero
+    6 |     }
+    7 |     
+    8 |     y = (1 / x);
+      |          ^^^^^
+    9 | }
+   10 | 
+  at <module> /home/connorwilkinson11/UMich/jaseci-ginS/jac/examples/final_test_cases/slides_example/example.jac:8
+2025-04-20 22:36:18 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 1, 'freq': 1}]}, {'bb_id': 1, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 1}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 2, 'freq': 1, 'predicted_edges': [], 'actual_edges': []}]}

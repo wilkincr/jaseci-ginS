@@ -1,0 +1,48 @@
+2025-04-21 23:02:53 - /home/connorwilkinson11/UMich/jaseci-ginS/jac/examples/gins_scripts/smart_assert/jac_files/test_gcd.jac:1:1 Deprecated syntax, use braces for multiple imports (e.g, import from mymod {a, b, c})
+2025-04-21 23:02:53 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 1}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 1, 'freq': 0, 'predicted_edges': [{'edge_to_bb_id': 3, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 3, 'freq': 0}]}, {'bb_id': 2, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 3, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 3, 'freq': 1}]}, {'bb_id': 3, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 4, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 4, 'freq': 1}]}, {'bb_id': 4, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 5, 'freq': 0}, {'edge_to_bb_id': 4, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 5, 'freq': 0}, {'edge_to_bb_id': 4, 'freq': 0}]}, {'bb_id': 5, 'freq': 0, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-21 23:02:53 - Error updating CFG for gcd: 'gcd'
+2025-04-21 23:03:06 - [SmartAssert] Assertion failed
+2025-04-21 23:03:06 - Error: [SmartAssert] Assertion failed
+   75 |     #     json.dump(output, fp, indent=2)
+   76 |         
+   77 |     raise AssertionError(f"[SmartAssert] Assertion failed")
+      |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   78 | 
+  at smart_assert() /home/connorwilkinson11/UMich/jaseci-ginS/jac/jaclang/runtimelib/gins/smart_assert.py:77
+  at <module> /home/connorwilkinson11/UMich/jaseci-ginS/jac/examples/gins_scripts/smart_assert/jac_files/test_gcd.jac:20
+2025-04-21 23:05:44 - /home/connorwilkinson11/UMich/jaseci-ginS/jac/examples/gins_scripts/smart_assert/jac_files/test_gcd.jac:1:1 Deprecated syntax, use braces for multiple imports (e.g, import from mymod {a, b, c})
+2025-04-21 23:05:44 - unhashable type: 'list'
+2025-04-21 23:05:44 - Error: unhashable type: 'list'
+  158 |                         # keys are (module, line_no, var_name), value is frequency
+  159 |                             variable_value = frame.f_locals[var_name]
+  160 |                             self.curr_variables[module][lineno][var_name][variable_value] += 1
+      |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  161 |                             # print(self.curr_variables[module][lineno][var_name])
+  162 |                             self.curr_line = lineno
+  at trace_callback() /home/connorwilkinson11/UMich/jaseci-ginS/jac/jaclang/runtimelib/gins/tracer.py:160
+  at <module> /home/connorwilkinson11/UMich/jaseci-ginS/jac/examples/gins_scripts/smart_assert/jac_files/test_gcd.jac:17
+2025-04-21 23:05:47 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 1}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 1, 'freq': 0, 'predicted_edges': [{'edge_to_bb_id': 3, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 3, 'freq': 0}]}, {'bb_id': 2, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 3, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 3, 'freq': 1}]}, {'bb_id': 3, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 4, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 4, 'freq': 0}]}, {'bb_id': 4, 'freq': 0, 'predicted_edges': [{'edge_to_bb_id': 5, 'freq': 0}, {'edge_to_bb_id': 4, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 5, 'freq': 0}, {'edge_to_bb_id': 4, 'freq': 0}]}, {'bb_id': 5, 'freq': 0, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-21 23:17:35 - /home/connorwilkinson11/UMich/jaseci-ginS/jac/examples/gins_scripts/smart_assert/jac_files/test_gcd.jac:1:1 Deprecated syntax, use braces for multiple imports (e.g, import from mymod {a, b, c})
+2025-04-21 23:17:35 - unhashable type: 'list'
+2025-04-21 23:17:35 - Error: unhashable type: 'list'
+  158 |                         # keys are (module, line_no, var_name), value is frequency
+  159 |                             variable_value = frame.f_locals[var_name]
+  160 |                             self.curr_variables[module][lineno][var_name][variable_value] += 1
+      |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  161 |                             # print(self.curr_variables[module][lineno][var_name])
+  162 |                             self.curr_line = lineno
+  at trace_callback() /home/connorwilkinson11/UMich/jaseci-ginS/jac/jaclang/runtimelib/gins/tracer.py:160
+  at <module> /home/connorwilkinson11/UMich/jaseci-ginS/jac/examples/gins_scripts/smart_assert/jac_files/test_gcd.jac:17
+2025-04-21 23:17:38 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 1}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 1, 'freq': 0, 'predicted_edges': [{'edge_to_bb_id': 3, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 3, 'freq': 0}]}, {'bb_id': 2, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 3, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 3, 'freq': 1}]}, {'bb_id': 3, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 4, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 4, 'freq': 0}]}, {'bb_id': 4, 'freq': 0, 'predicted_edges': [{'edge_to_bb_id': 5, 'freq': 0}, {'edge_to_bb_id': 4, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 5, 'freq': 0}, {'edge_to_bb_id': 4, 'freq': 0}]}, {'bb_id': 5, 'freq': 0, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-21 23:22:43 - /home/connorwilkinson11/UMich/jaseci-ginS/jac/examples/gins_scripts/smart_assert/jac_files/test_prime.jac:1:1 Deprecated syntax, use braces for multiple imports (e.g, import from mymod {a, b, c})
+2025-04-21 23:22:43 - {'cfg_bbs': [{'bb_id': 0, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 2, 'freq': 0}, {'edge_to_bb_id': 1, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 2, 'freq': 1}, {'edge_to_bb_id': 1, 'freq': 0}]}, {'bb_id': 1, 'freq': 0, 'predicted_edges': [{'edge_to_bb_id': 3, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 3, 'freq': 0}]}, {'bb_id': 2, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 3, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 3, 'freq': 1}]}, {'bb_id': 3, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 5, 'freq': 0}, {'edge_to_bb_id': 4, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 5, 'freq': 1}, {'edge_to_bb_id': 4, 'freq': 0}]}, {'bb_id': 4, 'freq': 0, 'predicted_edges': [{'edge_to_bb_id': 6, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 6, 'freq': 0}]}, {'bb_id': 5, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 6, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 6, 'freq': 1}]}, {'bb_id': 6, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 7, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 7, 'freq': 1}]}, {'bb_id': 7, 'freq': 1, 'predicted_edges': [{'edge_to_bb_id': 8, 'freq': 0}, {'edge_to_bb_id': 7, 'freq': 0}], 'actual_edges': [{'edge_to_bb_id': 8, 'freq': 0}, {'edge_to_bb_id': 7, 'freq': 0}]}, {'bb_id': 8, 'freq': 0, 'predicted_edges': [], 'actual_edges': []}]}
+2025-04-21 23:22:43 - Error updating CFG for is_prime: 'is_prime'
+2025-04-21 23:23:06 - [SmartAssert] Assertion failed
+2025-04-21 23:23:06 - Error: [SmartAssert] Assertion failed
+   75 |     #     json.dump(output, fp, indent=2)
+   76 |         
+   77 |     raise AssertionError(f"[SmartAssert] Assertion failed")
+      |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   78 | 
+  at smart_assert() /home/connorwilkinson11/UMich/jaseci-ginS/jac/jaclang/runtimelib/gins/smart_assert.py:77
+  at <module> /home/connorwilkinson11/UMich/jaseci-ginS/jac/examples/gins_scripts/smart_assert/jac_files/test_prime.jac:26
