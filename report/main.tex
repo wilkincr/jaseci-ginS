@@ -47,35 +47,6 @@
 %% adjustments are not allowed.
 
 %%
-%% \BibTeX command to typeset BibTeX logo in the docs
-\AtBeginDocument{%
-  \providecommand\BibTeX{{%
-    \normalfont B\kern-0.5em{\scshape i\kern-0.25em b}\kern-0.8em\TeX}}}
-
-%% Rights management information.  This information is sent to you
-%% when you complete the rights form.  These commands have SAMPLE
-%% values in them; it is your responsibility as an author to replace
-%% the commands and values with those provided to you when you
-%% complete the rights form.
-\setcopyright{acmlicensed}
-\copyrightyear{2024}
-\acmYear{2024}
-\acmDOI{XXXXXXX.XXXXXXX}
-
-%% These commands are for a PROCEEDINGS abstract or paper.
-\acmConference[Conference acronym 'XX]{Make sure to enter the correct
-  conference title from your rights confirmation email}{June 03--05,
-  2018}{Woodstock, NY}
-%
-%  Uncomment \acmBooktitle if th title of the proceedings is different
-%  from ``Proceedings of ...''!
-%
-%\acmBooktitle{Woodstock '18: ACM Symposium on Neural Gaze Detection,
-%  June 03--05, 2018, Woodstock, NY} 
-\acmISBN{978-1-4503-XXXX-X/18/06}
-
-
-%%
 %% Submission ID.
 %% Use this when submitting an article to a sponsored event. You'll
 %% receive a unique submission ID from the organizers
@@ -112,7 +83,6 @@
 
 %% % Location of your graphics files for figures, here a sub-folder to the main project folder
 \graphicspath{{./images/}} 
-
 
 \begin{document}
 
@@ -182,35 +152,28 @@ These prompts enable significantly more accurate and actionable analysis without
 Our smart assert mechanism extends traditional assertion tools by not only detecting program failures, but also automatically capturing the runtime state that contributed to the failure. This allows LLMs to provide immediate, context-sensitive feedback on the causes of runtime errors, making debugging faster and more intuitive.
 Through evaluation across [insert a short preview of your evaluation here - e.g., benchmarks, case studies, examples], we demonstrate that GinS improves the quality of LLM responses, reduces developer workload, and integrates naturally into existing development practices.
 
-\subsection{Do Not Remove Boilerplate Code}
-The TEX document includes code to generate sections such as the the copyright block. Do not remove these. Authors of accepted papers will receive sections of code to replace these and customise the final paper accordingly.
+\section{Background}
 
-Pay attention to the code comments about author information and add/remove authors as necessary; there must be at least one author. It is desirable that all/most authors have an ORCID ID as this is replacing the need for explicit emails (that my change as researcher move around. If an ORCID is supplied that author's name is made the anchor text of a web link to their ORCID page. 
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{images/Picture1.png}
+    \caption{Design of original implementation of GinS. Note analysis occuring both at compile time and runtime.}
+    \label{fig:enter-label}
+\end{figure}
 
-Macro codes are offered (\texttt{e.g. authornote}) which may be used as well as indicating the corresponding author(s) for communication during publication.
-
-\subsection{General points on ACM papers}
-See the file `sample-sigconf.pdf' provided with this template set. It explains the basics of a number of structural features.
-
-Newer users of \LaTeX\ should take care to understand \LaTeX's special characters that need explicit escaping. Also be aware that typographic quotes and en-dash/em-dash hyphens are not used literally in TEX documents but are indicated with macros.
-
-Overleaf has extensive documentation covering how to indicate typographic elements in \LaTeX code.
-
-\subsubsection{A Third-level Heading} 
-Note that level-three headings are inset into the beginning in the first paragraph of that section, regardless of line breaks in the source document.
-
-Sections at all three levels are auto-numbered, so these do not need to be numbered in your text.
-
-
-\section{Background and Related Work}
-
-\subsubsection{Previous GinS Implementation} 
-
-\subsection{Related Work}
+This project is implemented upon a previous CSE 583 semeseter project entitled Ghost in the Shell: A Framework to Prompt LLMs at Runtime with Dynamic Information.
+In this project, the group developed a Ghost in the Shell (GinS) thread in the Jac programming language.
+The general design of this project can be seen in Figure X.
+Before the target program began (i.e. during compile time), GinS would construct a CFG for the program.
+The GinS thread would then run alongside a Python runtime and gather profiling data on it.
+This data would then be used to prompt an LLM in real time to request improvement recommendations as well as hot path analysis and error detection.
+Our goal in the project discussed in this paper was to provide more detailed analysis of the GinS performance as well as expand its capabilities both in profiling information collected as well as how that information is used.
 
 \section{Expansions on GinS}
 
 \subsection{Additional Runtime Metrics}
+\subsubsection{Tracing Granularity}
+The original GinS implementation only used one type of tracing granularity. This involved a callback function that was called each time an instruction was executed in the Python runtime. This enabled very fine granularity, but resulted in significant overhead. An additional level of tracing granularity was tried in this iteration of the project. This involved using a timer as a signal to call a profiling function. This lead to lower granularity but also significantly lower overhead. These tracing granularities were relevant to which profiling metrics were able to be recorded as discussed in later sections.
 
 \subsection{Updated Prompt Formatting}
 
