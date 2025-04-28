@@ -115,7 +115,7 @@
 %% other information printed in the page headers. This command allows
 %% the author to define a more concise list
 %% of authors' names for this purpose.
-\renewcommand{\shortauthors}{Wilkinson, et al.}
+\renewcommand{\shortauthors}{Wilkinson, Ahmed, Sakamoto, Ghezzi}
 
 %%
 %% The abstract is a short summary of the work to be presented in the
@@ -158,12 +158,12 @@ Through evaluation across [insert a short preview of your evaluation here - e.g.
     \centering
     \includegraphics[width=0.5\linewidth]{images/Picture1.png}
     \caption{Design of original implementation of GinS. Note analysis occuring both at compile time and runtime.}
-    \label{fig:enter-label}
+    \label{fig:layout}
 \end{figure}
 
 This project is implemented upon a previous CSE 583 semeseter project entitled Ghost in the Shell: A Framework to Prompt LLMs at Runtime with Dynamic Information.
 In this project, the group developed a Ghost in the Shell (GinS) thread in the Jac programming language.
-The general design of this project can be seen in Figure X.
+The general design of this project can be seen in Figure~\ref{fig:layout}.
 Before the target program began (i.e. during compile time), GinS would construct a CFG for the program.
 The GinS thread would then run alongside a Python runtime and gather profiling data on it.
 This data would then be used to prompt an LLM in real time to request improvement recommendations as well as hot path analysis and error detection.
@@ -172,12 +172,47 @@ Our goal in the project discussed in this paper was to provide more detailed ana
 \section{Expansions on GinS}
 
 \subsection{Additional Runtime Metrics}
+The original GinS implementation used its compilation-time CFG to gather basic block execution counts and branch frequencies.
+GinS was enabled to collect additional metrics.
+One such new metric was time spent in each basic block.
+This was to enable bottleneck analysis and other timing analyses.
+Another new metric was the most common variable values for a basic block.
+The values seen for the variables in that basic block were recorded and this information was used when prompting the LLM.
+
 \subsubsection{Tracing Granularity}
-The original GinS implementation only used one type of tracing granularity. This involved a callback function that was called each time an instruction was executed in the Python runtime. This enabled very fine granularity, but resulted in significant overhead. An additional level of tracing granularity was tried in this iteration of the project. This involved using a timer as a signal to call a profiling function. This lead to lower granularity but also significantly lower overhead. These tracing granularities were relevant to which profiling metrics were able to be recorded as discussed in later sections.
+The original GinS implementation only used one type of tracing granularity.
+This involved a callback function that was called each time an instruction was executed in the Python runtime.
+This enabled very fine granularity, but resulted in significant overhead.
+An additional level of tracing granularity was tried in this iteration of the project.
+This involved using a timer as a signal to call a profiling function. This lead to lower granularity but also significantly lower overhead.
+These tracing granularities were relevant to which profiling metrics were able to be recorded.
 
 \subsection{Updated Prompt Formatting}
 
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{images/Picture2.png}
+    \caption{Example of source code annotated with basic blocks and execution frequency.}
+    \label{fig:annotations}
+\end{figure}
+
+A major factor in receiving a quality response from an LLM is prompt design.
+It is not just the information that is sent to an LLM that matters; how that information is sent is also highly relevant to response quality.
+Because of this, we tested a variety of prompt formats to see which arrangement of information lead to the most useful LLM responses.
+There were 5 main prompt types that we used.
+For each prompt type, the LLM would be send that type's annotated source code and then an identical prompt.
+The first prompt type was plain source code.
+The second was the source code annotated with Basic Block values and execution frequencies at each line.
+Comments were used to make these annotations (see Figure~\ref{fig:annotations}).
+The third prompt type was to annotate the source code with the bytecode instructions that corresponded to each line of python code.
+These were annotated in a very similar fashion to the basic block annotations, as were all further discussed annotations.
+The fourth prompt type included annotations for the most common seen variable values at each line.
+The fifth prompt type included all of the three previously discussed types of annotations, and is referred to as the Combined Complete Information annotation.
+
 \subsection{Smart Assertions}
+Smart Assertions, elsewhere referred to as Intelligent Failure Analysis, are an updated form of assert statements.
+While a normal assertion statement will print out a previously formed error statement, smart assertions involve taking the runtime state at the time of the assertion failure, submitting it to an LLM, and requesting an analysis for the cause of the failure.
+FURTHER DISCUSS DESIGN AND IMPLEMENTATION HERE
 
 \section{Evaluation}
 
