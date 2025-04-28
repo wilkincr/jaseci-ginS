@@ -1,7 +1,0 @@
-.jac_mypy_cache/
-.envrc
-env/*
-
-#ignore generated visual files
-cfg.gv.pdf
-cfg.gv
