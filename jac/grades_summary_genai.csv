@@ -1,0 +1,4 @@
+report_file,timestamp,jac_file,view,correctness,completeness,clarity,avg_score
+test_dijkstras.jac_multi_report_20250421_174551228713.json,2025-04-21T17:45:51.228221Z,test_dijkstras.jac,source_only,5,5,5,5.0
+test_dijkstras.jac_multi_report_20250421_174551228713.json,2025-04-21T17:45:51.228221Z,test_dijkstras.jac,with_bb,5,5,5,5.0
+test_dijkstras.jac_multi_report_20250421_174551228713.json,2025-04-21T17:45:51.228221Z,test_dijkstras.jac,with_instr,5,5,5,5.0
