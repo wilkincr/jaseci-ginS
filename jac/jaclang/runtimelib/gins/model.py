@@ -81,7 +81,13 @@ class Gemini(BaseModel):
 
     def generate(self, prompt: str):
         response = self.model.generate_content(prompt, )
-        return response.text
+        usage_metadata = response.usage_metadata
+        token_info = {
+            "prompt_token_count": usage_metadata.prompt_token_count,
+            "candidates_token_count": usage_metadata.candidates_token_count,
+            "total_token_count": usage_metadata.total_token_count,
+        }
+        return response.text, token_info
         
     def generate_structured(self, prompt: str):
         import google.generativeai as genai
@@ -91,7 +97,14 @@ class Gemini(BaseModel):
           response_mime_type='application/json',
           response_schema=Response),)
         response_dict = json.loads(response.text)
-        return response_dict
+        usage_metadata = response.usage_metadata
+        token_info = {
+            "prompt_token_count": usage_metadata.prompt_token_count,
+            "candidates_token_count": usage_metadata.candidates_token_count,
+            "total_token_count": usage_metadata.total_token_count,
+        }
+        response_dict = json.loads(response.text)
+        return response_dict, token_info
 
     def generate_fixed_code(self, prompt: str):
         import google.generativeai as genai
@@ -101,4 +114,11 @@ class Gemini(BaseModel):
           response_mime_type='application/json',
           response_schema=FixSuggestion),)
         response_dict = json.loads(response.text)
-        return response_dict
+        usage_metadata = response.usage_metadata
+        token_info = {
+            "prompt_token_count": usage_metadata.prompt_token_count,
+            "candidates_token_count": usage_metadata.candidates_token_count,
+            "total_token_count": usage_metadata.total_token_count,
+        }
+        response_dict = json.loads(response.text)
+        return response_dict, token_info

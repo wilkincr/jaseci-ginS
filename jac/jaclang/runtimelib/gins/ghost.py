@@ -40,6 +40,8 @@ class ShellGhost:
 
         self.model = Gemini()
 
+        self.token_usage_log = []
+
         self.deque_lock = threading.Lock()
         self.__cfg_deque_dict = dict()
         self.__cfg_deque_size = 10
@@ -385,8 +387,13 @@ class ShellGhost:
             """
         
         print(f"Generating analysis for {version_name} version")
-        error_response = self.model.generate_structured(prompt)
+        error_response, token_info = self.model.generate_structured(prompt)
         
+        if token_info:
+            self.logger.info(f"Token usage for '{version_name}' analysis: {token_info}")
+        else:
+             self.logger.warning(f"No token usage information received for '{version_name}' analysis.")
+
         # Write the response to a file with a version-specific name
         output_filename = None
         if self.source_file_path:
@@ -468,7 +475,12 @@ class ShellGhost:
         Here is the annotated code:
         {annotated_code}"""
 
-        error_response = self.model.generate_structured(prompt)
+        error_response, token_info = self.model.generate_structured(prompt)
+       
+        if token_info:
+             self.logger.info(f"Token usage for initial analysis: {token_info}")
+        else:
+             self.logger.warning("No token usage info received for initial analysis.")
 
         response = ""
         for improvement in error_response['improvement_list']:
@@ -490,7 +502,12 @@ class ShellGhost:
             Format your response as a Python code block starting with ```python and ending with ```\
             """
             print(improvement)
-            response = self.model.generate_fixed_code(prompt)
+            response, fix_token_info = self.model.generate_fixed_code(prompt)
+
+            if fix_token_info:
+                 self.logger.info(f"Token usage for generating fix for line {improvement['start_line']}: {fix_token_info}")
+            else:
+                 self.logger.warning(f"No token usage info received for generating fix for line {improvement['start_line']}.")
 
             lines = response["fix_code"].splitlines()
             response["fix_code"] = "\n".join(line for line in lines if not line.strip().startswith("```"))
@@ -500,6 +517,32 @@ class ShellGhost:
             print(response)
         return response
 
+    def save_token_usage(self, output_filename=None):
+        """Saves the accumulated token usage log to a JSON file."""
+        if not self.token_usage_log:
+            return
+        
+        if self.source_file_path:
+            source_dir = os.path.dirname(self.source_file_path)
+            base_name = os.path.basename(self.source_file_path)
+            source_name = os.path.splitext(base_name)[0]
+        else:
+            source_dir = "."  
+            source_name = "unknown_source"
+        
+        if not output_filename:
+            timestamp = int(time.time())
+            filename = f"{source_name}_token_count_{timestamp}.json"
+        else:
+            filename = output_filename
+        
+        if not filename.endswith('.json'):
+            filename += '.json'
+
+        full_path = os.path.join(source_dir, filename)
+        with open(full_path, 'w') as f:
+            json.dump(self.token_usage_log, f, indent=4)
+        self.logger.info(f"Token usage log saved to {full_path} ({len(self.token_usage_log)} records)")
 
     def worker(self):
         self.cfg_cv.acquire()
@@ -583,6 +626,7 @@ class ShellGhost:
 
         print("\nUpdating cfgs at the end")
         self._do_cfg_update()
+
         #Multiple fixes needed
         # self.apply_multiple_fix_up()
 

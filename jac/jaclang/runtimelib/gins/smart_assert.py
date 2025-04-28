@@ -17,36 +17,37 @@ def smart_assert(condition: bool):
         active_shell_ghost.worker_update_once()
 
     versions = active_shell_ghost.annotate_source_code()
-
+    versions = versions.get("complete")
     file_path = active_shell_ghost.source_file_path
     file_name = os.path.basename(file_path)
 
-    llm_data = {}
-    for name, lines in versions.items():
-        code = "\n".join(lines)
-        prompt = (
-            f"A smart assertion failed.\n\n"
-            f"Here is the annotated code:\n\n{code}\n\n"
-            "Please explain why this failure occurred and how to fix it."
-        )
-        response = active_shell_ghost.model.generate(prompt).strip()
-        llm_data[name] = {
-            "prompt": prompt,
-            "response": response
-        }
+    prompt = (
+        f"A smart assertion failed.\n\n"
+        f"Here is the program annotated with control flow, instructions, and variable values:\n\n{versions}\n\n"
+        "Please explain why this failure occurred and how to fix it."
+    )
+    response, token_info = active_shell_ghost.model.generate(prompt)
+    response = response.strip()
 
-    # 4) Write one JSON containing all prompts + responses
+    if token_info:
+        print(f"Token usage for generating {token_info}")
+
     report = {
         "timestamp": datetime.utcnow().isoformat() + "Z",
         "file": file_name,
-        "llm_analysis": llm_data
+        "prompt": prompt,
+        "response": response,
+        "token_info" : token_info
     }
+
     out_dir = "examples/gins_scripts/smart_assert/smart_assert_reports"
     os.makedirs(out_dir, exist_ok=True)
-    fname = f"{file_name}_multi_report_{datetime.utcnow():%Y%m%d_%H%M%S%f}.json"
+    fname = f"{file_name}_complete_report_{datetime.utcnow():%Y%m%d_%H%M%S%f}.json"
     path = os.path.join(out_dir, fname)
     with open(path, "w") as fp:
         json.dump(report, fp, indent=2)
+    
+    print(f"[SmartAssert] failed\n\n{response}")
 
 
     # prompt = f"""
@@ -74,4 +75,4 @@ def smart_assert(condition: bool):
     # with open(path, "w") as fp:
     #     json.dump(output, fp, indent=2)
         
-    raise AssertionError(f"[SmartAssert] Assertion failed")
+    raise AssertionError(f"[SmartAssert] failed")

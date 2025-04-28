@@ -157,6 +157,8 @@ class CFGTracker:
                                     self.inputs.append(frame.f_locals[var_name])
                         # keys are (module, line_no, var_name), value is frequency
                             variable_value = frame.f_locals[var_name]
+                            if isinstance(variable_value, (list, set, dict)):
+                                continue
                             self.curr_variables[module][lineno][var_name][variable_value] += 1
                             # print(self.curr_variables[module][lineno][var_name])
                             self.curr_line = lineno
