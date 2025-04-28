@@ -37,6 +37,8 @@ class ShellGhost:
 
         self.model = Gemini()
 
+        self.token_usage_log = []
+
         self.deque_lock = threading.Lock()
         self.__cfg_deque_dict = dict()
         self.__cfg_deque_size = 10
@@ -297,7 +299,15 @@ class ShellGhost:
             """
         
         print(f"Generating analysis for {version_name} version")
-        error_response = self.model.generate_structured(prompt)
+        error_response, token_info = self.model.generate_structured(prompt)
+        print(token_info)
+        if token_info:
+            self.token_usage_log.append({
+                "timestamp": time.time(),
+                "type": "analysis",
+                "version": version_name,
+                "usage": token_info
+            })
         
         # Write the response to a file with a version-specific name
         output_filename = None
@@ -313,7 +323,33 @@ class ShellGhost:
         return error_response
     
 
-    
+    def save_token_usage(self, output_filename=None):
+        """Saves the accumulated token usage log to a JSON file."""
+        if not self.token_usage_log:
+            return
+        
+        if self.source_file_path:
+            source_dir = os.path.dirname(self.source_file_path)
+            base_name = os.path.basename(self.source_file_path)
+            source_name = os.path.splitext(base_name)[0]
+        else:
+            source_dir = "."  
+            source_name = "unknown_source"
+        
+        if not output_filename:
+            timestamp = int(time.time())
+            filename = f"{source_name}_token_count_{timestamp}.json"
+        else:
+            filename = output_filename
+        
+        if not filename.endswith('.json'):
+            filename += '.json'
+
+        full_path = os.path.join(source_dir, filename)
+        with open(full_path, 'w') as f:
+            json.dump(self.token_usage_log, f, indent=4)
+        self.logger.info(f"Token usage log saved to {full_path} ({len(self.token_usage_log)} records)")
+
     def worker(self):
         self.cfg_cv.acquire()
         if self.cfgs == None:
@@ -390,8 +426,8 @@ class ShellGhost:
         update_cfg()
         for cfg in self.cfgs.values():
             print(cfg.get_cfg_repr())
-        
         self.annotate_source_code()
+        self.save_token_usage()
             # variable_tracker = VariableTracker(self.tracker.get_variable_values(), cfg.block_map.line_to_blocks)
 
 
