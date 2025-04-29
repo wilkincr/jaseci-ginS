@@ -1,0 +1,17 @@
+{
+    "complete": [
+    
+    
+    ],
+    "source-only":[
+    
+    ],
+    "with-bb" : [
+        {
+            "end_line": 20,
+            "improvement_desc": "The inner loop iterates through each 'customer' in 'accounts'.  Then the second inner loop iterates through each 'money' in the 'customer' list and updates the 'wealth' variable. After that, there is a check if 'wealth' exceeds 'max_wealth'. If it does, the 'max_wealth' is updated. Finally, it prints whether 'max_wealth' is equal to 'solution'.",
+            "start_line": 11,
+            "type_of_improvement": "Logic and control flow analysis"
+        }
+    ]
+}
