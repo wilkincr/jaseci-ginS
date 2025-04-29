@@ -24,7 +24,7 @@ with entry { # BB: 0 Execution frequency: 1 Total execution time: 0.004 ms
             current_sum += nums[right]; # BB: 2 Execution frequency: 0 Total execution time: 0.000 ms
             while (current_sum >= target) { # BB: 2
                 min_length:int = min(min_length, right - left + 1); # BB: 4 Execution frequency: 0 Total execution time: 0.000 ms
-                current_sum -= nums[left]; # BB: 4
+                current_sum -= nums[right]; # BB: 4
                 left += 1; # BB: 4
             }
         }

@@ -14,9 +14,9 @@ with entry {
         accounts: list[list[int]] = test_accounts[i];
         solution: int = test_solutions[i];
         max_wealth: int = 0;
+        wealth: int = 0;
 
         for customer in accounts {
-            wealth: int = 0;
             for money in customer {
                 wealth += money;
             }

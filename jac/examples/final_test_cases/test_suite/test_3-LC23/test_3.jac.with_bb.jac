@@ -1,4 +1,4 @@
-with entry { # BB: 0 Execution frequency: 1 Total execution time: 0.006 ms
+with entry { # BB: 0 Execution frequency: 0 Total execution time: 0.000 ms
     test_lists: list[list[list[int]]] = [ # BB: 0
         [[1,4,5],[1,3,4],[2,6]], # BB: 0
         [], # BB: 0
@@ -19,7 +19,7 @@ with entry { # BB: 0 Execution frequency: 1 Total execution time: 0.006 ms
     ];
 
     for i in range(len(test_lists)) { # BB: 0
-        lists: list[list[int]] = test_lists[i]; # BB: 1 Execution frequency: 1 Total execution time: 0.000 ms
+        lists: list[list[int]] = test_lists[i]; # BB: 1 Execution frequency: 0 Total execution time: 0.000 ms
         solution: list[int] = test_solutions[i]; # BB: 1
         merged: list[int] = []; # BB: 1
 

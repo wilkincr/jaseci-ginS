@@ -27,7 +27,7 @@ with entry {
             dp[0]:int = nums[0];
             dp[1]:int = max(nums[0], nums[1]);
             for j in range(2, n) {
-                dp[j]:int = max(dp[j-1], dp[j-2] + nums[j]);
+                dp[j]:int = max(dp[j-1] + nums[j], dp[j-2] + nums[j]);
             }
             answer:int = dp[-1];
         }

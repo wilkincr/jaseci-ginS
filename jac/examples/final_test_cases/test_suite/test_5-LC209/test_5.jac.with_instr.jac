@@ -46,8 +46,8 @@ with entry {
             while (current_sum >= target) {
             #   Instructions: [LOAD_NAME(current_sum), LOAD_NAME(current_sum)]
                 min_length:int = min(min_length, right - left + 1);
-                #   Instructions: [PUSH_NULL(None), LOAD_NAME(min) [no line], LOAD_NAME(min_length) [no line], LOAD_NAME(right) [no line], LOAD_NAME(left) [no line], BINARY_OP(10) [no line], LOAD_CONST(1) [no line], BINARY_OP(0) [no line], CALL(2) [no line], STORE_NAME(min_length) [no line], LOAD_CONST(int) [no line], LOAD_NAME(__annotations__) [no line], LOAD_CONST(min_length) [no line], STORE_SUBSCR(None) [no line], LOAD_NAME(nums) [no line], LOAD_NAME(left) [no line], BINARY_SUBSCR(None) [no line], BINARY_OP(23) [no line], STORE_NAME(current_sum) [no line], LOAD_CONST(1) [no line], BINARY_OP(13) [no line], STORE_NAME(left) [no line], LOAD_NAME(target) [no line], COMPARE_OP(>=) [no line], POP_JUMP_IF_FALSE(404) [no line]]
-                current_sum -= nums[left];
+                #   Instructions: [PUSH_NULL(None), LOAD_NAME(min) [no line], LOAD_NAME(min_length) [no line], LOAD_NAME(right) [no line], LOAD_NAME(left) [no line], BINARY_OP(10) [no line], LOAD_CONST(1) [no line], BINARY_OP(0) [no line], CALL(2) [no line], STORE_NAME(min_length) [no line], LOAD_CONST(int) [no line], LOAD_NAME(__annotations__) [no line], LOAD_CONST(min_length) [no line], STORE_SUBSCR(None) [no line], LOAD_NAME(nums) [no line], LOAD_NAME(right) [no line], BINARY_SUBSCR(None) [no line], BINARY_OP(23) [no line], STORE_NAME(current_sum) [no line], LOAD_CONST(1) [no line], BINARY_OP(13) [no line], STORE_NAME(left) [no line], LOAD_NAME(target) [no line], COMPARE_OP(>=) [no line], POP_JUMP_IF_FALSE(404) [no line]]
+                current_sum -= nums[right];
                 #   Instructions: [LOAD_NAME(current_sum)]
                 left += 1;
                 #   Instructions: [LOAD_NAME(left)]

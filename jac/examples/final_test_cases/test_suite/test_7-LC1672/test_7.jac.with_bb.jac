@@ -14,14 +14,14 @@ with entry { # BB: 0 Execution frequency: 1 Total execution time: 0.004 ms
         accounts: list[list[int]] = test_accounts[i]; # BB: 1 Execution frequency: 1 Total execution time: 0.004 ms
         solution: int = test_solutions[i]; # BB: 1
         max_wealth: int = 0; # BB: 1
+        wealth: int = 0; # BB: 1
 
         for customer in accounts { # BB: 1
-            wealth: int = 0; # BB: 2 Execution frequency: 1 Total execution time: 0.001 ms
-            for money in customer { # BB: 2
-                wealth += money; # BB: 3 Execution frequency: 1 Total execution time: 0.000 ms
+            for money in customer { # BB: 2 Execution frequency: 2 Total execution time: 0.001 ms
+                wealth += money; # BB: 3 Execution frequency: 2 Total execution time: 0.002 ms
             }
-            if (wealth > max_wealth) { # BB: 4 Execution frequency: 0 Total execution time: 0.000 ms
-                max_wealth:int = wealth; # BB: 6 Execution frequency: 0 Total execution time: 0.000 ms
+            if (wealth > max_wealth) { # BB: 4 Execution frequency: 1 Total execution time: 0.000 ms
+                max_wealth:int = wealth; # BB: 6 Execution frequency: 1 Total execution time: 0.001 ms
             }
         }
 

@@ -25,8 +25,8 @@ with entry {
         total: int = 0;
 
         for elt in nums {
-            total += elt;
             running_sum.append(total);
+            total += elt;
         }
 
         print(running_sum == solution);

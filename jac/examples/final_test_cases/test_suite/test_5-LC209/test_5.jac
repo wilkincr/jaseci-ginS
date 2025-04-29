@@ -24,7 +24,7 @@ with entry {
             current_sum += nums[right];
             while (current_sum >= target) {
                 min_length:int = min(min_length, right - left + 1);
-                current_sum -= nums[left];
+                current_sum -= nums[right];
                 left += 1;
             }
         }

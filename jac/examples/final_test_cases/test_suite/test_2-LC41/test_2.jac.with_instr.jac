@@ -23,7 +23,7 @@ with entry {
     for i in range(len(test_nums)) {
     #   Instructions: [PUSH_NULL(None), END_FOR(None)]
         nums: list[int] = test_nums[i];
-        #   Instructions: [FOR_ITER(540) [no line], STORE_NAME(i) [no line], LOAD_NAME(test_nums), LOAD_NAME(i) [no line], BINARY_SUBSCR(None) [no line], STORE_NAME(nums) [no line], LOAD_CONST(list[int]) [no line], LOAD_NAME(__annotations__) [no line], LOAD_CONST(nums) [no line], STORE_SUBSCR(None) [no line], LOAD_NAME(i) [no line], BINARY_SUBSCR(None) [no line], STORE_NAME(solution) [no line], LOAD_CONST(int) [no line], LOAD_NAME(__annotations__) [no line], LOAD_CONST(solution) [no line], STORE_SUBSCR(None) [no line], LOAD_NAME(len) [no line], LOAD_NAME(nums) [no line], CALL(1) [no line], STORE_NAME(n) [no line], LOAD_CONST(int) [no line], LOAD_NAME(__annotations__) [no line], LOAD_CONST(n) [no line], STORE_SUBSCR(None) [no line], LOAD_NAME(range) [no line], LOAD_NAME(n) [no line], CALL(1) [no line], GET_ITER(None) [no line]]
+        #   Instructions: [FOR_ITER(528) [no line], STORE_NAME(i) [no line], LOAD_NAME(test_nums), LOAD_NAME(i) [no line], BINARY_SUBSCR(None) [no line], STORE_NAME(nums) [no line], LOAD_CONST(list[int]) [no line], LOAD_NAME(__annotations__) [no line], LOAD_CONST(nums) [no line], STORE_SUBSCR(None) [no line], LOAD_NAME(i) [no line], BINARY_SUBSCR(None) [no line], STORE_NAME(solution) [no line], LOAD_CONST(int) [no line], LOAD_NAME(__annotations__) [no line], LOAD_CONST(solution) [no line], STORE_SUBSCR(None) [no line], LOAD_NAME(len) [no line], LOAD_NAME(nums) [no line], CALL(1) [no line], STORE_NAME(n) [no line], LOAD_CONST(int) [no line], LOAD_NAME(__annotations__) [no line], LOAD_CONST(n) [no line], STORE_SUBSCR(None) [no line], LOAD_NAME(range) [no line], LOAD_NAME(n) [no line], CALL(1) [no line], GET_ITER(None) [no line]]
         solution: int = test_solutions[i];
         #   Instructions: [LOAD_NAME(test_solutions)]
         
@@ -47,10 +47,10 @@ with entry {
         #   Instructions: [LOAD_NAME(n)]
         for j in range(n) {
         #   Instructions: [PUSH_NULL(None), END_FOR(None)]
-            if (nums[j] != j+1) {
-            #   Instructions: [FOR_ITER(514) [no line], STORE_NAME(j) [no line], LOAD_NAME(nums), LOAD_NAME(j) [no line], BINARY_SUBSCR(None) [no line], LOAD_NAME(j) [no line], LOAD_CONST(1) [no line], BINARY_OP(0) [no line], COMPARE_OP(!=) [no line], POP_JUMP_IF_TRUE(490) [no line]]
-                missing:int = j+1;
-                #   Instructions: [LOAD_NAME(j), LOAD_CONST(1) [no line], BINARY_OP(0) [no line], STORE_NAME(missing) [no line], LOAD_CONST(int) [no line], LOAD_NAME(__annotations__) [no line], LOAD_CONST(missing) [no line], STORE_SUBSCR(None) [no line], JUMP_FORWARD(516) [no line]]
+            if (nums[j] != j) {
+            #   Instructions: [FOR_ITER(502) [no line], STORE_NAME(j) [no line], LOAD_NAME(nums), LOAD_NAME(j) [no line], BINARY_SUBSCR(None) [no line], LOAD_NAME(j) [no line], COMPARE_OP(!=) [no line], POP_JUMP_IF_TRUE(484) [no line]]
+                missing:int = j;
+                #   Instructions: [LOAD_NAME(j), STORE_NAME(missing) [no line], LOAD_CONST(int) [no line], LOAD_NAME(__annotations__) [no line], LOAD_CONST(missing) [no line], STORE_SUBSCR(None) [no line], JUMP_FORWARD(504) [no line]]
                 break;
                 #   Instructions: [POP_TOP(None)]
             }

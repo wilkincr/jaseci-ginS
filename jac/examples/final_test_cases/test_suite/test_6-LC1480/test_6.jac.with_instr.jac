@@ -48,10 +48,10 @@ with entry {
 
         for elt in nums {
         #   Instructions: [LOAD_NAME(nums), END_FOR(None), LOAD_NAME(print) [no line], LOAD_NAME(running_sum) [no line], LOAD_NAME(solution) [no line], COMPARE_OP(==) [no line], CALL(1) [no line], POP_TOP(None) [no line], JUMP_BACKWARD(144) [no line]]
-            total += elt;
-            #   Instructions: [FOR_ITER(274) [no line], STORE_NAME(elt) [no line], LOAD_NAME(total), LOAD_NAME(elt) [no line], BINARY_OP(13) [no line], STORE_NAME(total) [no line], LOAD_ATTR(append) [no line], LOAD_NAME(total) [no line], CALL(1) [no line], POP_TOP(None) [no line], JUMP_BACKWARD(222) [no line]]
             running_sum.append(total);
-            #   Instructions: [LOAD_NAME(running_sum)]
+            #   Instructions: [FOR_ITER(274) [no line], STORE_NAME(elt) [no line], LOAD_NAME(running_sum), LOAD_ATTR(append) [no line], LOAD_NAME(total) [no line], CALL(1) [no line], POP_TOP(None) [no line], LOAD_NAME(elt) [no line], BINARY_OP(13) [no line], STORE_NAME(total) [no line], JUMP_BACKWARD(222) [no line]]
+            total += elt;
+            #   Instructions: [LOAD_NAME(total)]
         }
 
         print(running_sum == solution);

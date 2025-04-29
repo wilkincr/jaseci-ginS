@@ -26,8 +26,8 @@ with entry {
 
         missing: int = n + 1;
         for j in range(n) {
-            if (nums[j] != j+1) {
-                missing:int = j+1;
+            if (nums[j] != j) {
+                missing:int = j;
                 break;
             }
         }
