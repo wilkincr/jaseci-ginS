@@ -1,0 +1,11 @@
+{
+    "with-instr": [
+      {
+        "start_line": 30,
+        "end_line": 31,
+        "type_of_improvement": "safety_improvement",
+        "improvement_desc": "The subtraction `current_sum -= nums[right]` might result in an underflow if `current_sum` is less than `nums[right]`. Add checks to prevent this from happening."
+      }
+    ]
+  }
+  
