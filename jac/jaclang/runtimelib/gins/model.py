@@ -69,7 +69,7 @@ class Gemini(BaseModel):
             else:
                 import os
 
-                genai.configure(api_key="AIzaSyDCb9X9QEPg12gPPcfvAu7zudYnF9Qowu0")
+                genai.configure(api_key="AIzaSyBOlW1P-t9dFo9HpPvXuKLYc3Sl6aoL_LQ")
             self.model = genai.GenerativeModel()
             import os
         except Exception as e:

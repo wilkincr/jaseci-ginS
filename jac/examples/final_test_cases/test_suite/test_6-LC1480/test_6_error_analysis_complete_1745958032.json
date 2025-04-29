@@ -1,0 +1,22 @@
+{
+    "improvement_list": [
+        {
+            "end_line": 36,
+            "improvement_desc": "The inner loop calculates a running sum and compares it to the expected solution.  However, it appends the previous total to the `running_sum` before adding the current element.  This is incorrect; it should append the updated total after adding the current element. The comparison will always be incorrect because the running sum is off by one element.",
+            "start_line": 28,
+            "type_of_improvement": "logic_bug"
+        },
+        {
+            "end_line": 25,
+            "improvement_desc": "The `running_sum` list is initialized as an empty list. For empty input lists, this causes no issues. But for non-empty lists, the first element of `nums` is added to `total`, but not appended to `running_sum`, resulting in the first element being missed.",
+            "start_line": 25,
+            "type_of_improvement": "logic_bug"
+        },
+        {
+            "end_line": 27,
+            "improvement_desc": "The variable `total` is initialized to 0. For empty input lists, this will work correctly. However, for non-empty lists, the total is calculated correctly but the first element is missed from the running sum list.",
+            "start_line": 27,
+            "type_of_improvement": "logic_bug"
+        }
+    ]
+}

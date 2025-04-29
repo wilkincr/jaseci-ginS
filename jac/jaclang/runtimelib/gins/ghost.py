@@ -99,15 +99,12 @@ class ShellGhost:
             "complete": list(source_code_lines)            # With all annotations
         }
         base_output_path = self.source_file_path
-        bb_runtime_map = {}   # bb_id -> (exec_count, total_time)
         instr_line_map = defaultdict(list)  # line_number -> [instruction strings]
         
         for module, cfg in self.cfgs.items():
-            # Map basic blocks to their runtime metrics
+            # Map instructions to their source lines
             for block_id, block in cfg.block_map.idx_to_block.items():
-                bb_runtime_map[block_id] = (block.exec_count, block.total_time)
-                
-                # Map instructions to their source lines
+                # For each instruction in the block, map it to its source line
                 for instr in block.instructions:
                     # If instruction has a line number, map it to that line
                     if instr.lineno is not None:
@@ -135,7 +132,6 @@ class ShellGhost:
             # Create the variable tracker to access variable information per block
             variable_tracker = VariableTracker(self.tracker.get_variable_values(),
                                             cfg.block_map.line_to_blocks)
-            print("BBRUNTIME_MAP", bb_runtime_map)
             
             # Process each version with appropriate annotations
             for version_name in versions:
@@ -152,8 +148,13 @@ class ShellGhost:
                         block_id = cfg.block_map.line_to_blocks[line_number]
                         if block_id != current_bb:
                             current_bb = block_id
-                            execution_freq, execution_time = bb_runtime_map[block_id]
-                            versions[version_name][adjusted_line_idx] += f" # BB: {block_id} Execution frequency: {execution_freq} Total execution time: {execution_time:.3f} ms"
+                            # Show all possible basic block transitions without counts
+                            transitions = []
+                            for next_bb in cfg.edges.get(block_id, []):
+                                transitions.append(f"BB{block_id}->BB{next_bb}")
+                            
+                            transitions_str = ", ".join(transitions) if transitions else "No transitions"
+                            versions[version_name][adjusted_line_idx] += f" # BB: {block_id} Transitions: {transitions_str}"
                         else:
                             versions[version_name][adjusted_line_idx] += f" # BB: {block_id}"
                     
@@ -193,7 +194,7 @@ class ShellGhost:
                                 versions[version_name].insert(var_line_idx, var_line)
                                 inserted_line_count += 1
 
-                                # mark done so we don’t print again
+                                # mark done so we don't print again
                                 var_printed_blocks.add(block_id)
                                 # Save all versions to appropriate files
             
@@ -257,7 +258,7 @@ class ShellGhost:
             """
         elif version_name == "with_bb":
             prompt += """
-            - Basic block annotations (e.g., `# BB: 0 Execution frequency: 1 Total execution time: 0.001 ms`)
+            - Basic block annotations (e.g., `# BB: 0 Transitions: BB0->BB1, BB0->BB2`)
             """
         elif version_name == "with_instr":
             prompt += """
@@ -269,7 +270,7 @@ class ShellGhost:
             """
         else:  
             prompt += """
-            - Basic block transitions (e.g., `# BB: 0 Execution frequency: 1 Total execution time: 0.001 ms`)
+            - Basic block transitions (e.g., `# BB: 0 Transitions: BB0->BB1, BB0->BB2`)
             - Bytecode instructions generated from that line (e.g., `#   Instructions: [SETUP_ANNOTATIONS(None)]`)
             - Variable values observed in this block (e.g., `#   Variable values in this block:   x = 0 (seen 3×)  y = 4 (seen 48×)`)
             """
@@ -429,7 +430,3 @@ class ShellGhost:
         self.annotate_source_code()
         self.save_token_usage()
             # variable_tracker = VariableTracker(self.tracker.get_variable_values(), cfg.block_map.line_to_blocks)
-
-
-
-   

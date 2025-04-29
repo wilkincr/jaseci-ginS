@@ -1,4 +1,4 @@
-with entry { # BB: 0 Execution frequency: 1 Total execution time: 0.000 ms
+with entry { # BB: 0 Transitions: BB0->BB1
     test_lists: list[list[list[int]]] = [ # BB: 0
         [[1,4,5],[1,3,4],[2,6]], # BB: 0
         [], # BB: 0
@@ -19,37 +19,37 @@ with entry { # BB: 0 Execution frequency: 1 Total execution time: 0.000 ms
     ];
 
     for i in range(len(test_lists)) { # BB: 0
-        lists: list[list[int]] = test_lists[i]; # BB: 1 Execution frequency: 0 Total execution time: 0.000 ms
+        lists: list[list[int]] = test_lists[i]; # BB: 1 Transitions: BB1->BB14, BB1->BB2
         solution: list[int] = test_solutions[i]; # BB: 1
 
         merged: list[int] = []; # BB: 1
 
         pointers: list[int] = []; # BB: 1
         for _ in range(len(lists)) { # BB: 1
-            pointers.append(0); # BB: 2 Execution frequency: 0 Total execution time: 0.000 ms
+            pointers.append(0); # BB: 2 Transitions: BB2->BB3, BB2->BB2
         }
 
-        while True { # BB: 3 Execution frequency: 0 Total execution time: 0.000 ms
-            min_val: int = 2147483647; # BB: 4 Execution frequency: 0 Total execution time: 0.000 ms
+        while True { # BB: 3 Transitions: BB3->BB4
+            min_val: int = 2147483647; # BB: 4 Transitions: BB4->BB5
             min_idx: int = -1; # BB: 4
 
             for j in range(len(lists)) { # BB: 4
-                if pointers[j] < len(lists[j]) { # BB: 5 Execution frequency: 0 Total execution time: 0.000 ms
-                    if lists[j][pointers[j]] < min_val { # BB: 7 Execution frequency: 0 Total execution time: 0.000 ms
-                        min_val:int = lists[j][pointers[j]]; # BB: 9 Execution frequency: 0 Total execution time: 0.000 ms
+                if pointers[j] < len(lists[j]) { # BB: 5 Transitions: BB5->BB10, BB5->BB7, BB5->BB6
+                    if lists[j][pointers[j]] < min_val { # BB: 7 Transitions: BB7->BB9, BB7->BB8
+                        min_val:int = lists[j][pointers[j]]; # BB: 9 Transitions: BB9->BB5
                         min_idx:int = j; # BB: 9
                     }
                 }
             }
 
-            if min_idx == -1 { # BB: 10 Execution frequency: 0 Total execution time: 0.000 ms
-                break; # BB: 11 Execution frequency: 0 Total execution time: 0.000 ms
+            if min_idx == -1 { # BB: 10 Transitions: BB10->BB12, BB10->BB11
+                break; # BB: 11 Transitions: BB11->BB13
             }
 
-            merged.append(min_val); # BB: 12 Execution frequency: 0 Total execution time: 0.000 ms
+            merged.append(min_val); # BB: 12 Transitions: BB12->BB4
             pointers[min_idx] += 1; # BB: 12
         }
 
-        print(merged == solution); # BB: 13 Execution frequency: 0 Total execution time: 0.000 ms
+        print(merged == solution); # BB: 13 Transitions: BB13->BB1
     }
 }

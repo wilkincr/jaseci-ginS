@@ -1,4 +1,4 @@
-with entry { # BB: 0 Execution frequency: 1 Total execution time: 0.000 ms
+with entry { # BB: 0 Transitions: BB0->BB1
 #   Instructions: [SETUP_ANNOTATIONS(None)]
 #   Variable values in this block:   test_lists = [[[1, 4, 5], [1, 3, 4], [2, 6]], [], [[]], [[1, 3, 5, 7], [2, 4, 6, 8]], [[1], [0]], [[1, 2], [1, 3, 4], [2, 6]], [[5, 6, 7], [1, 2, 3, 8]]] (seen 9×)  test_solutions = [[1, 1, 2, 3, 4, 4, 5, 6], [], [], [1, 2, 3, 4, 5, 6, 7, 8], [0, 1], [1, 1, 2, 2, 3, 4, 6], [1, 2, 3, 5, 6, 7, 8]] (seen 1×)
     test_lists: list[list[list[int]]] = [ # BB: 0
@@ -38,7 +38,7 @@ with entry { # BB: 0 Execution frequency: 1 Total execution time: 0.000 ms
 
     for i in range(len(test_lists)) { # BB: 0
     #   Instructions: [PUSH_NULL(None), END_FOR(None)]
-        lists: list[list[int]] = test_lists[i]; # BB: 1 Execution frequency: 0 Total execution time: 0.000 ms
+        lists: list[list[int]] = test_lists[i]; # BB: 1 Transitions: BB1->BB14, BB1->BB2
         #   Instructions: [FOR_ITER(614) [no line], STORE_NAME(i) [no line], LOAD_NAME(test_lists), LOAD_NAME(i) [no line], BINARY_SUBSCR(None) [no line], STORE_NAME(lists) [no line], LOAD_CONST(list[list[int]]) [no line], LOAD_NAME(__annotations__) [no line], LOAD_CONST(lists) [no line], STORE_SUBSCR(None) [no line], LOAD_NAME(i) [no line], BINARY_SUBSCR(None) [no line], STORE_NAME(solution) [no line], LOAD_CONST(list[int]) [no line], LOAD_NAME(__annotations__) [no line], LOAD_CONST(solution) [no line], STORE_SUBSCR(None) [no line], STORE_NAME(merged) [no line], LOAD_CONST(list[int]) [no line], LOAD_NAME(__annotations__) [no line], LOAD_CONST(merged) [no line], STORE_SUBSCR(None) [no line], STORE_NAME(pointers) [no line], LOAD_CONST(list[int]) [no line], LOAD_NAME(__annotations__) [no line], LOAD_CONST(pointers) [no line], STORE_SUBSCR(None) [no line], LOAD_NAME(range) [no line], PUSH_NULL(None) [no line], LOAD_NAME(len) [no line], LOAD_NAME(lists) [no line], CALL(1) [no line], CALL(1) [no line], GET_ITER(None) [no line]]
         #   Variable values in this block:   test_lists = [[[1, 4, 5], [1, 3, 4], [2, 6]], [], [[]], [[1, 3, 5, 7], [2, 4, 6, 8]], [[1], [0]], [[1, 2], [1, 3, 4], [2, 6]], [[5, 6, 7], [1, 2, 3, 8]]] (seen 8×)  test_solutions = [[1, 1, 2, 3, 4, 4, 5, 6], [], [], [1, 2, 3, 4, 5, 6, 7, 8], [0, 1], [1, 1, 2, 2, 3, 4, 6], [1, 2, 3, 5, 6, 7, 8]] (seen 8×)  lists = [[1, 4, 5], [1, 3, 4], [2, 6]] (seen 7×)  solution = [1, 1, 2, 3, 4, 4, 5, 6] (seen 6×)  merged = [] (seen 5×)  pointers = [] (seen 1×)  pointers = [0] (seen 1×)  pointers = [0, 0] (seen 1×)  pointers = [0, 0, 0] (seen 1×)
         solution: list[int] = test_solutions[i]; # BB: 1
@@ -51,15 +51,15 @@ with entry { # BB: 0 Execution frequency: 1 Total execution time: 0.000 ms
         #   Instructions: [BUILD_LIST(0)]
         for _ in range(len(lists)) { # BB: 1
         #   Instructions: [PUSH_NULL(None), END_FOR(None)]
-            pointers.append(0); # BB: 2 Execution frequency: 0 Total execution time: 0.000 ms
+            pointers.append(0); # BB: 2 Transitions: BB2->BB3, BB2->BB2
             #   Instructions: [FOR_ITER(334) [no line], STORE_NAME(_) [no line], LOAD_NAME(pointers), LOAD_ATTR(append) [no line], LOAD_CONST(0) [no line], CALL(1) [no line], POP_TOP(None) [no line], JUMP_BACKWARD(292) [no line]]
             #   Variable values in this block:   test_lists = [[[1, 4, 5], [1, 3, 4], [2, 6]], [], [[]], [[1, 3, 5, 7], [2, 4, 6, 8]], [[1], [0]], [[1, 2], [1, 3, 4], [2, 6]], [[5, 6, 7], [1, 2, 3, 8]]] (seen 3×)  test_solutions = [[1, 1, 2, 3, 4, 4, 5, 6], [], [], [1, 2, 3, 4, 5, 6, 7, 8], [0, 1], [1, 1, 2, 2, 3, 4, 6], [1, 2, 3, 5, 6, 7, 8]] (seen 3×)  lists = [[1, 4, 5], [1, 3, 4], [2, 6]] (seen 3×)  solution = [1, 1, 2, 3, 4, 4, 5, 6] (seen 3×)  merged = [] (seen 3×)  pointers = [] (seen 1×)  pointers = [0] (seen 1×)  pointers = [0, 0] (seen 1×)
         }
 
-        while True { # BB: 3 Execution frequency: 0 Total execution time: 0.000 ms
+        while True { # BB: 3 Transitions: BB3->BB4
         #   Instructions: [NOP(None), JUMP_BACKWARD(338)]
         #   Variable values in this block:   test_lists = [[[1, 4, 5], [1, 3, 4], [2, 6]], [], [[]], [[1, 3, 5, 7], [2, 4, 6, 8]], [[1], [0]], [[1, 2], [1, 3, 4], [2, 6]], [[5, 6, 7], [1, 2, 3, 8]]] (seen 1×)  test_solutions = [[1, 1, 2, 3, 4, 4, 5, 6], [], [], [1, 2, 3, 4, 5, 6, 7, 8], [0, 1], [1, 1, 2, 2, 3, 4, 6], [1, 2, 3, 5, 6, 7, 8]] (seen 1×)  lists = [[1, 4, 5], [1, 3, 4], [2, 6]] (seen 1×)  solution = [1, 1, 2, 3, 4, 4, 5, 6] (seen 1×)  merged = [] (seen 1×)  pointers = [0, 0, 0] (seen 1×)
-            min_val: int = 2147483647; # BB: 4 Execution frequency: 0 Total execution time: 0.000 ms
+            min_val: int = 2147483647; # BB: 4 Transitions: BB4->BB5
             #   Instructions: [LOAD_CONST(2147483647), STORE_NAME(min_val) [no line], LOAD_CONST(int) [no line], LOAD_NAME(__annotations__) [no line], LOAD_CONST(min_val) [no line], STORE_SUBSCR(None) [no line], STORE_NAME(min_idx) [no line], LOAD_CONST(int) [no line], LOAD_NAME(__annotations__) [no line], LOAD_CONST(min_idx) [no line], STORE_SUBSCR(None) [no line], LOAD_NAME(range) [no line], PUSH_NULL(None) [no line], LOAD_NAME(len) [no line], LOAD_NAME(lists) [no line], CALL(1) [no line], CALL(1) [no line], GET_ITER(None) [no line]]
             #   Variable values in this block:   test_lists = [[[1, 4, 5], [1, 3, 4], [2, 6]], [], [[]], [[1, 3, 5, 7], [2, 4, 6, 8]], [[1], [0]], [[1, 2], [1, 3, 4], [2, 6]], [[5, 6, 7], [1, 2, 3, 8]]] (seen 3×)  test_solutions = [[1, 1, 2, 3, 4, 4, 5, 6], [], [], [1, 2, 3, 4, 5, 6, 7, 8], [0, 1], [1, 1, 2, 2, 3, 4, 6], [1, 2, 3, 5, 6, 7, 8]] (seen 3×)  lists = [[1, 4, 5], [1, 3, 4], [2, 6]] (seen 3×)  solution = [1, 1, 2, 3, 4, 4, 5, 6] (seen 3×)  merged = [] (seen 3×)  pointers = [0, 0, 0] (seen 3×)  min_val = 2147483647 (seen 2×)  min_idx = -1 (seen 1×)
             min_idx: int = -1; # BB: 4
@@ -67,13 +67,13 @@ with entry { # BB: 0 Execution frequency: 1 Total execution time: 0.000 ms
 
             for j in range(len(lists)) { # BB: 4
             #   Instructions: [PUSH_NULL(None), END_FOR(None), LOAD_CONST(-1) [no line], COMPARE_OP(==) [no line], POP_JUMP_IF_FALSE(528) [no line]]
-                if pointers[j] < len(lists[j]) { # BB: 5 Execution frequency: 0 Total execution time: 0.000 ms
+                if pointers[j] < len(lists[j]) { # BB: 5 Transitions: BB5->BB10, BB5->BB7, BB5->BB6
                 #   Instructions: [FOR_ITER(514) [no line], STORE_NAME(j) [no line], LOAD_NAME(pointers), LOAD_NAME(j) [no line], BINARY_SUBSCR(None) [no line], PUSH_NULL(None) [no line], LOAD_NAME(len) [no line], LOAD_NAME(lists) [no line], LOAD_NAME(j) [no line], BINARY_SUBSCR(None) [no line], CALL(1) [no line], COMPARE_OP(<) [no line], POP_JUMP_IF_TRUE(436) [no line]]
                 #   Variable values in this block:   test_lists = [[[1, 4, 5], [1, 3, 4], [2, 6]], [], [[]], [[1, 3, 5, 7], [2, 4, 6, 8]], [[1], [0]], [[1, 2], [1, 3, 4], [2, 6]], [[5, 6, 7], [1, 2, 3, 8]]] (seen 1×)  test_solutions = [[1, 1, 2, 3, 4, 4, 5, 6], [], [], [1, 2, 3, 4, 5, 6, 7, 8], [0, 1], [1, 1, 2, 2, 3, 4, 6], [1, 2, 3, 5, 6, 7, 8]] (seen 1×)  lists = [[1, 4, 5], [1, 3, 4], [2, 6]] (seen 1×)  solution = [1, 1, 2, 3, 4, 4, 5, 6] (seen 1×)  merged = [] (seen 1×)  pointers = [0, 0, 0] (seen 1×)  min_val = 2147483647 (seen 1×)  min_idx = -1 (seen 1×)
-                    if lists[j][pointers[j]] < min_val { # BB: 7 Execution frequency: 0 Total execution time: 0.000 ms
+                    if lists[j][pointers[j]] < min_val { # BB: 7 Transitions: BB7->BB9, BB7->BB8
                     #   Instructions: [LOAD_NAME(lists), LOAD_NAME(j) [no line], BINARY_SUBSCR(None) [no line], LOAD_NAME(pointers) [no line], LOAD_NAME(j) [no line], BINARY_SUBSCR(None) [no line], BINARY_SUBSCR(None) [no line], LOAD_NAME(min_val) [no line], COMPARE_OP(<) [no line], POP_JUMP_IF_TRUE(466) [no line]]
                     #   Variable values in this block:   test_lists = [[[1, 4, 5], [1, 3, 4], [2, 6]], [], [[]], [[1, 3, 5, 7], [2, 4, 6, 8]], [[1], [0]], [[1, 2], [1, 3, 4], [2, 6]], [[5, 6, 7], [1, 2, 3, 8]]] (seen 1×)  test_solutions = [[1, 1, 2, 3, 4, 4, 5, 6], [], [], [1, 2, 3, 4, 5, 6, 7, 8], [0, 1], [1, 1, 2, 2, 3, 4, 6], [1, 2, 3, 5, 6, 7, 8]] (seen 1×)  lists = [[1, 4, 5], [1, 3, 4], [2, 6]] (seen 1×)  solution = [1, 1, 2, 3, 4, 4, 5, 6] (seen 1×)  merged = [] (seen 1×)  pointers = [0, 0, 0] (seen 1×)  min_val = 2147483647 (seen 1×)  min_idx = -1 (seen 1×)
-                        min_val:int = lists[j][pointers[j]]; # BB: 9 Execution frequency: 0 Total execution time: 0.000 ms
+                        min_val:int = lists[j][pointers[j]]; # BB: 9 Transitions: BB9->BB5
                         #   Instructions: [LOAD_NAME(lists), LOAD_NAME(j) [no line], BINARY_SUBSCR(None) [no line], LOAD_NAME(pointers) [no line], LOAD_NAME(j) [no line], BINARY_SUBSCR(None) [no line], BINARY_SUBSCR(None) [no line], STORE_NAME(min_val) [no line], LOAD_CONST(int) [no line], LOAD_NAME(__annotations__) [no line], LOAD_CONST(min_val) [no line], STORE_SUBSCR(None) [no line], STORE_NAME(min_idx) [no line], LOAD_CONST(int) [no line], LOAD_NAME(__annotations__) [no line], LOAD_CONST(min_idx) [no line], STORE_SUBSCR(None) [no line], JUMP_BACKWARD(394) [no line]]
                         #   Variable values in this block:   test_lists = [[[1, 4, 5], [1, 3, 4], [2, 6]], [], [[]], [[1, 3, 5, 7], [2, 4, 6, 8]], [[1], [0]], [[1, 2], [1, 3, 4], [2, 6]], [[5, 6, 7], [1, 2, 3, 8]]] (seen 1×)  test_solutions = [[1, 1, 2, 3, 4, 4, 5, 6], [], [], [1, 2, 3, 4, 5, 6, 7, 8], [0, 1], [1, 1, 2, 2, 3, 4, 6], [1, 2, 3, 5, 6, 7, 8]] (seen 1×)  lists = [[1, 4, 5], [1, 3, 4], [2, 6]] (seen 1×)  solution = [1, 1, 2, 3, 4, 4, 5, 6] (seen 1×)  merged = [] (seen 1×)  pointers = [0, 0, 0] (seen 1×)  min_val = 2147483647 (seen 1×)  min_idx = -1 (seen 1×)
                         min_idx:int = j; # BB: 9
@@ -82,19 +82,19 @@ with entry { # BB: 0 Execution frequency: 1 Total execution time: 0.000 ms
                 }
             }
 
-            if min_idx == -1 { # BB: 10 Execution frequency: 0 Total execution time: 0.000 ms
+            if min_idx == -1 { # BB: 10 Transitions: BB10->BB12, BB10->BB11
             #   Instructions: [LOAD_NAME(min_idx)]
-                break; # BB: 11 Execution frequency: 0 Total execution time: 0.000 ms
+                break; # BB: 11 Transitions: BB11->BB13
                 #   Instructions: [JUMP_FORWARD(590)]
             }
 
-            merged.append(min_val); # BB: 12 Execution frequency: 0 Total execution time: 0.000 ms
+            merged.append(min_val); # BB: 12 Transitions: BB12->BB4
             #   Instructions: [LOAD_NAME(merged), LOAD_ATTR(append) [no line], LOAD_NAME(min_val) [no line], CALL(1) [no line], POP_TOP(None) [no line], LOAD_NAME(min_idx) [no line], COPY(2) [no line], COPY(2) [no line], BINARY_SUBSCR(None) [no line], LOAD_CONST(1) [no line], BINARY_OP(13) [no line], SWAP(3) [no line], SWAP(2) [no line], STORE_SUBSCR(None) [no line]]
             pointers[min_idx] += 1; # BB: 12
             #   Instructions: [LOAD_NAME(pointers)]
         }
 
-        print(merged == solution); # BB: 13 Execution frequency: 0 Total execution time: 0.000 ms
+        print(merged == solution); # BB: 13 Transitions: BB13->BB1
         #   Instructions: [PUSH_NULL(None), LOAD_NAME(print) [no line], LOAD_NAME(merged) [no line], LOAD_NAME(solution) [no line], COMPARE_OP(==) [no line], CALL(1) [no line], POP_TOP(None) [no line], JUMP_BACKWARD(190) [no line]]
     }
 }

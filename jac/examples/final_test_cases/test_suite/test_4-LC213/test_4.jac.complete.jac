@@ -1,4 +1,4 @@
-with entry { # BB: 0 Execution frequency: 1 Total execution time: 0.009 ms
+with entry { # BB: 0 Transitions: BB0->BB1
 #   Instructions: [SETUP_ANNOTATIONS(None)]
 #   Variable values in this block:   test_nums = [[2, 7, 9, 3, 1], [1, 2, 3, 1], [2, 1, 1, 2], [5], [], [2, 1, 1, 2, 1], [10, 1, 1, 10]] (seen 2×)  test_solutions = [12, 4, 4, 5, 0, 5, 20] (seen 1×)
     test_nums: list[list[int]] = [ # BB: 0
@@ -23,7 +23,7 @@ with entry { # BB: 0 Execution frequency: 1 Total execution time: 0.009 ms
 
     for i in range(len(test_nums)) { # BB: 0
     #   Instructions: [PUSH_NULL(None), END_FOR(None)]
-        nums: list[int] = test_nums[i]; # BB: 1 Execution frequency: 1 Total execution time: 0.000 ms
+        nums: list[int] = test_nums[i]; # BB: 1 Transitions: BB1->BB9, BB1->BB3, BB1->BB2
         #   Instructions: [FOR_ITER(498) [no line], STORE_NAME(i) [no line], LOAD_NAME(test_nums), LOAD_NAME(i) [no line], BINARY_SUBSCR(None) [no line], STORE_NAME(nums) [no line], LOAD_CONST(list[int]) [no line], LOAD_NAME(__annotations__) [no line], LOAD_CONST(nums) [no line], STORE_SUBSCR(None) [no line], LOAD_NAME(i) [no line], BINARY_SUBSCR(None) [no line], STORE_NAME(solution) [no line], LOAD_CONST(int) [no line], LOAD_NAME(__annotations__) [no line], LOAD_CONST(solution) [no line], STORE_SUBSCR(None) [no line], STORE_NAME(answer) [no line], LOAD_CONST(int) [no line], LOAD_NAME(__annotations__) [no line], LOAD_CONST(answer) [no line], STORE_SUBSCR(None) [no line], LOAD_NAME(len) [no line], LOAD_NAME(nums) [no line], CALL(1) [no line], LOAD_CONST(0) [no line], COMPARE_OP(==) [no line], POP_JUMP_IF_FALSE(210) [no line]]
         #   Variable values in this block:   test_nums = [[2, 7, 9, 3, 1], [1, 2, 3, 1], [2, 1, 1, 2], [5], [], [2, 1, 1, 2, 1], [10, 1, 1, 10]] (seen 4×)  test_solutions = [12, 4, 4, 5, 0, 5, 20] (seen 4×)  nums = [2, 7, 9, 3, 1] (seen 3×)  solution = 12 (seen 2×)  answer = 0 (seen 1×)
         solution: int = test_solutions[i]; # BB: 1
@@ -33,17 +33,17 @@ with entry { # BB: 0 Execution frequency: 1 Total execution time: 0.009 ms
 
         if (len(nums) == 0) { # BB: 1
         #   Instructions: [PUSH_NULL(None)]
-            answer: int = 0; # BB: 2 Execution frequency: 0 Total execution time: 0.000 ms
+            answer: int = 0; # BB: 2 Transitions: BB2->BB8
             #   Instructions: [LOAD_CONST(0), STORE_NAME(answer) [no line], LOAD_CONST(int) [no line], LOAD_NAME(__annotations__) [no line], LOAD_CONST(answer) [no line], STORE_SUBSCR(None) [no line], JUMP_FORWARD(474) [no line]]
         }
-        elif (len(nums) == 1) { # BB: 3 Execution frequency: 0 Total execution time: 0.000 ms
+        elif (len(nums) == 1) { # BB: 3 Transitions: BB3->BB5, BB3->BB4
         #   Instructions: [PUSH_NULL(None), LOAD_NAME(len) [no line], LOAD_NAME(nums) [no line], CALL(1) [no line], LOAD_CONST(1) [no line], COMPARE_OP(==) [no line], POP_JUMP_IF_FALSE(254) [no line]]
         #   Variable values in this block:   test_nums = [[2, 7, 9, 3, 1], [1, 2, 3, 1], [2, 1, 1, 2], [5], [], [2, 1, 1, 2, 1], [10, 1, 1, 10]] (seen 1×)  test_solutions = [12, 4, 4, 5, 0, 5, 20] (seen 1×)  nums = [2, 7, 9, 3, 1] (seen 1×)  solution = 12 (seen 1×)  answer = 0 (seen 1×)
-            answer:int = nums[0]; # BB: 4 Execution frequency: 0 Total execution time: 0.000 ms
+            answer:int = nums[0]; # BB: 4 Transitions: BB4->BB8
             #   Instructions: [LOAD_NAME(nums), LOAD_CONST(0) [no line], BINARY_SUBSCR(None) [no line], STORE_NAME(answer) [no line], LOAD_CONST(int) [no line], LOAD_NAME(__annotations__) [no line], LOAD_CONST(answer) [no line], STORE_SUBSCR(None) [no line], JUMP_FORWARD(474) [no line]]
         }
         else {
-            n: int = len(nums); # BB: 5 Execution frequency: 0 Total execution time: 0.000 ms
+            n: int = len(nums); # BB: 5 Transitions: BB5->BB6
             #   Instructions: [PUSH_NULL(None), LOAD_NAME(len) [no line], LOAD_NAME(nums) [no line], CALL(1) [no line], STORE_NAME(n) [no line], LOAD_CONST(int) [no line], LOAD_NAME(__annotations__) [no line], LOAD_CONST(n) [no line], STORE_SUBSCR(None) [no line], BUILD_LIST(1) [no line], LOAD_NAME(n) [no line], BINARY_OP(5) [no line], STORE_NAME(dp) [no line], LOAD_CONST(list[int]) [no line], LOAD_NAME(__annotations__) [no line], LOAD_CONST(dp) [no line], STORE_SUBSCR(None) [no line], LOAD_CONST(0) [no line], BINARY_SUBSCR(None) [no line], LOAD_NAME(dp) [no line], LOAD_CONST(0) [no line], STORE_SUBSCR(None) [no line], LOAD_NAME(max) [no line], LOAD_NAME(nums) [no line], LOAD_CONST(0) [no line], BINARY_SUBSCR(None) [no line], LOAD_NAME(nums) [no line], LOAD_CONST(1) [no line], BINARY_SUBSCR(None) [no line], CALL(2) [no line], LOAD_NAME(dp) [no line], LOAD_CONST(1) [no line], STORE_SUBSCR(None) [no line], LOAD_NAME(range) [no line], LOAD_CONST(2) [no line], LOAD_NAME(n) [no line], CALL(2) [no line], GET_ITER(None) [no line]]
             #   Variable values in this block:   test_nums = [[2, 7, 9, 3, 1], [1, 2, 3, 1], [2, 1, 1, 2], [5], [], [2, 1, 1, 2, 1], [10, 1, 1, 10]] (seen 7×)  test_solutions = [12, 4, 4, 5, 0, 5, 20] (seen 7×)  nums = [2, 7, 9, 3, 1] (seen 7×)  solution = 12 (seen 7×)  answer = 0 (seen 7×)  n = 5 (seen 6×)  dp = [0, 0, 0, 0, 0] (seen 1×)  dp = [2, 0, 0, 0, 0] (seen 1×)  dp = [2, 7, 0, 0, 0] (seen 1×)  dp = [2, 7, 16, 0, 0] (seen 1×)  dp = [2, 7, 16, 19, 0] (seen 1×)
             dp: list[int] = [0]*n; # BB: 5
@@ -54,15 +54,15 @@ with entry { # BB: 0 Execution frequency: 1 Total execution time: 0.009 ms
             #   Instructions: [PUSH_NULL(None)]
             for j in range(2, n) { # BB: 5
             #   Instructions: [PUSH_NULL(None), END_FOR(None), LOAD_CONST(-1) [no line], BINARY_SUBSCR(None) [no line], STORE_NAME(answer) [no line], LOAD_CONST(int) [no line], LOAD_NAME(__annotations__) [no line], LOAD_CONST(answer) [no line], STORE_SUBSCR(None) [no line]]
-                dp[j]:int = max(dp[j-1] + nums[j], dp[j-2] + nums[j]); # BB: 6 Execution frequency: 0 Total execution time: 0.000 ms
+                dp[j]:int = max(dp[j-1] + nums[j], dp[j-2] + nums[j]); # BB: 6 Transitions: BB6->BB7, BB6->BB6
                 #   Instructions: [FOR_ITER(452) [no line], STORE_NAME(j) [no line], PUSH_NULL(None), LOAD_NAME(max) [no line], LOAD_NAME(dp) [no line], LOAD_NAME(j) [no line], LOAD_CONST(1) [no line], BINARY_OP(10) [no line], BINARY_SUBSCR(None) [no line], LOAD_NAME(nums) [no line], LOAD_NAME(j) [no line], BINARY_SUBSCR(None) [no line], BINARY_OP(0) [no line], LOAD_NAME(dp) [no line], LOAD_NAME(j) [no line], LOAD_CONST(2) [no line], BINARY_OP(10) [no line], BINARY_SUBSCR(None) [no line], LOAD_NAME(nums) [no line], LOAD_NAME(j) [no line], BINARY_SUBSCR(None) [no line], BINARY_OP(0) [no line], CALL(2) [no line], LOAD_NAME(dp) [no line], LOAD_NAME(j) [no line], STORE_SUBSCR(None) [no line], JUMP_BACKWARD(372) [no line]]
                 #   Variable values in this block:   test_nums = [[2, 7, 9, 3, 1], [1, 2, 3, 1], [2, 1, 1, 2], [5], [], [2, 1, 1, 2, 1], [10, 1, 1, 10]] (seen 3×)  test_solutions = [12, 4, 4, 5, 0, 5, 20] (seen 3×)  nums = [2, 7, 9, 3, 1] (seen 3×)  solution = 12 (seen 3×)  answer = 0 (seen 3×)  n = 5 (seen 3×)  dp = [2, 7, 0, 0, 0] (seen 1×)  dp = [2, 7, 16, 0, 0] (seen 1×)  dp = [2, 7, 16, 19, 0] (seen 1×)
             }
-            answer:int = dp[-1]; # BB: 7 Execution frequency: 0 Total execution time: 0.000 ms
+            answer:int = dp[-1]; # BB: 7 Transitions: BB7->BB8
             #   Instructions: [LOAD_NAME(dp)]
         }
 
-        print(answer == solution); # BB: 8 Execution frequency: 0 Total execution time: 0.000 ms
+        print(answer == solution); # BB: 8 Transitions: BB8->BB1
         #   Instructions: [PUSH_NULL(None), LOAD_NAME(print) [no line], LOAD_NAME(answer) [no line], LOAD_NAME(solution) [no line], COMPARE_OP(==) [no line], CALL(1) [no line], POP_TOP(None) [no line], JUMP_BACKWARD(112) [no line]]
     }
 }

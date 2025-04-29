@@ -1,0 +1,52 @@
+[
+    {
+        "timestamp": 1745957891.0211134,
+        "type": "analysis",
+        "version": "source_only",
+        "usage": {
+            "prompt_token_count": 1643,
+            "candidates_token_count": 307,
+            "total_token_count": 1950
+        }
+    },
+    {
+        "timestamp": 1745957893.398661,
+        "type": "analysis",
+        "version": "with_bb",
+        "usage": {
+            "prompt_token_count": 1881,
+            "candidates_token_count": 320,
+            "total_token_count": 2201
+        }
+    },
+    {
+        "timestamp": 1745957897.434934,
+        "type": "analysis",
+        "version": "with_instr",
+        "usage": {
+            "prompt_token_count": 3317,
+            "candidates_token_count": 549,
+            "total_token_count": 3866
+        }
+    },
+    {
+        "timestamp": 1745957899.212591,
+        "type": "analysis",
+        "version": "with_vars",
+        "usage": {
+            "prompt_token_count": 1656,
+            "candidates_token_count": 217,
+            "total_token_count": 1873
+        }
+    },
+    {
+        "timestamp": 1745957902.6931186,
+        "type": "analysis",
+        "version": "complete",
+        "usage": {
+            "prompt_token_count": 3588,
+            "candidates_token_count": 477,
+            "total_token_count": 4065
+        }
+    }
+]
