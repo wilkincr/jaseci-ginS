@@ -1,0 +1,22 @@
+{
+    "improvement_list": [
+        {
+            "end_line": 14,
+            "improvement_desc": "Potential division by zero.  Add a check to ensure y is not zero before the division on line 14. This could occur if the loop completes and y becomes 0.",
+            "start_line": 14,
+            "type_of_improvement": "safety improvement"
+        },
+        {
+            "end_line": 10,
+            "improvement_desc": "Unnecessary computation in the loop. The value of y is overwritten in each iteration of the loop; therefore, the calculation of x inside the loop could potentially be simplified or optimized.",
+            "start_line": 8,
+            "type_of_improvement": "performance improvement"
+        },
+        {
+            "end_line": 14,
+            "improvement_desc": "The variable z is computed and overwritten in line 7 and later overwritten in line 14. The intermediate value of z is not used after line 7.  Consider removing the redundant computation in line 14.",
+            "start_line": 7,
+            "type_of_improvement": "performance improvement"
+        }
+    ]
+}

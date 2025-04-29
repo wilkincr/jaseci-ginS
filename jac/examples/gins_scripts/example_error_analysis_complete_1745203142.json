@@ -1,0 +1,22 @@
+{
+    "improvement_list": [
+        {
+            "end_line": 6,
+            "improvement_desc": "The variable x is initialized to 0, then immediately overwritten in the loop. The initialization is redundant and can be removed.",
+            "start_line": 5,
+            "type_of_improvement": "performance improvement"
+        },
+        {
+            "end_line": 11,
+            "improvement_desc": "Division by zero is possible if y becomes 0. Add a check to handle this case.",
+            "start_line": 11,
+            "type_of_improvement": "safety improvement"
+        },
+        {
+            "end_line": 11,
+            "improvement_desc": "The variable z is assigned the value x/y after the loop.  Since x is always 2 and y is 3 after loop (except for first iteration), the value of z is a constant 2/3 which can be calculated once in place of this division.",
+            "start_line": 11,
+            "type_of_improvement": "performance improvement"
+        }
+    ]
+}

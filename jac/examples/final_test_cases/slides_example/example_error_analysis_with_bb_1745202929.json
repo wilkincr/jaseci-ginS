@@ -1,0 +1,16 @@
+{
+    "improvement_list": [
+        {
+            "end_line": 7,
+            "improvement_desc": "Division by zero.  The variable 'x' is decremented to 0 in the for loop.  The program should include a check to avoid division by zero.",
+            "start_line": 6,
+            "type_of_improvement": "safety"
+        },
+        {
+            "end_line": 6,
+            "improvement_desc": "Unreachable code. After the for loop, x will always be 0. Thus, the next line causes a division by zero error.",
+            "start_line": 4,
+            "type_of_improvement": "logic"
+        }
+    ]
+}

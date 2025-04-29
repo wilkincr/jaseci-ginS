@@ -7,6 +7,7 @@ import importlib.util
 import os
 import sys
 import types
+import time
 from os import getcwd, path
 from typing import Optional, Union
 
@@ -350,6 +351,7 @@ class JacImporter(Importer):
 
                 from jaclang.runtimelib.machine import JacMachine
 
+                start_exec_time = time.time()
                 if JacMachine.get().gin:
                     try:
                         bytecode_level = False
@@ -365,6 +367,11 @@ class JacImporter(Importer):
                         raise e
                 else:
                     exec(codeobj, module.__dict__)
+                end_exec_time = time.time()
+                module.__exec_time = end_exec_time - start_exec_time
+                print(
+                    f"Executed in {module.__exec_time} seconds."
+                )
 
         import_return = ImportReturn(module, unique_loaded_items, self)
         if spec.items:

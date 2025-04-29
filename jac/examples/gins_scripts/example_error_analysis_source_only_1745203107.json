@@ -1,0 +1,16 @@
+{
+    "improvement_list": [
+        {
+            "end_line": 8,
+            "improvement_desc": "Division by zero.  The value of x will be -49 after the for loop, and y is 3. The division x/y will not result in an error, but the result will be an unexpected value. Consider adding input validation or handling the potential for division by zero.",
+            "start_line": 7,
+            "type_of_improvement": "safety"
+        },
+        {
+            "end_line": 6,
+            "improvement_desc": "The loop iterates 49 times, decreasing x by 1 each time.  This could be simplified to x = x - 49; The value of x will be -49 after the loop.",
+            "start_line": 5,
+            "type_of_improvement": "performance"
+        }
+    ]
+}

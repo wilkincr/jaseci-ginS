@@ -1,0 +1,10 @@
+{
+    "improvement_list": [
+        {
+            "end_line": 12,
+            "improvement_desc": "Division by zero may occur because x becomes 0 after the loop.  Add a check to ensure x is not 0 before the division.",
+            "start_line": 12,
+            "type_of_improvement": "safety"
+        }
+    ]
+}

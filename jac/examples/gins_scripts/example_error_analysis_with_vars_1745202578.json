@@ -1,0 +1,16 @@
+{
+    "improvement_list": [
+        {
+            "end_line": 16,
+            "improvement_desc": "Potential division by zero error.  Add check to ensure 'y' is not zero before dividing 'x' by 'y'.",
+            "start_line": 16,
+            "type_of_improvement": "safety"
+        },
+        {
+            "end_line": 11,
+            "improvement_desc": "Unreachable code path. The 'if' condition (x % 2) will always be false when x = 4, 20, 24, 28, etc. making this code unreachable. ",
+            "start_line": 10,
+            "type_of_improvement": "logic_bug"
+        }
+    ]
+}

@@ -1,0 +1,22 @@
+{
+    "improvement_list": [
+        {
+            "end_line": 19,
+            "improvement_desc": "Potential division by zero error.  Add a check to ensure 'y' is not zero before the division operation.",
+            "start_line": 19,
+            "type_of_improvement": "safety"
+        },
+        {
+            "end_line": 19,
+            "improvement_desc": "The variable 'y' is frequently assigned the value 4 in the loop, and only becomes 0 under certain conditions.  Consider simplifying the logic or restructuring the loop to avoid the condition where y could potentially become 0.",
+            "start_line": 10,
+            "type_of_improvement": "logic"
+        },
+        {
+            "end_line": 21,
+            "improvement_desc": "Unreachable code. The `print(\"hello\")` statement will always execute after the loop concludes; thus this line can be safely removed.",
+            "start_line": 21,
+            "type_of_improvement": "logic"
+        }
+    ]
+}
