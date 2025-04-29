@@ -1,0 +1,23 @@
+{
+"complete": [
+
+
+],
+"source-only":[
+    {
+        "end_line": 26,
+        "improvement_desc": "The variable 'min_length' is initialized to n + 1. This is redundant as it's already set in the while loop. This could be simplified to start 'min_length' with the value of 'n'.",
+        "start_line": 16,
+        "type_of_improvement": "performance_improvement"
+    }
+],
+"with-bb" : [
+
+],
+"with-instr": [
+
+],
+"with-vars": [
+    
+]
+}

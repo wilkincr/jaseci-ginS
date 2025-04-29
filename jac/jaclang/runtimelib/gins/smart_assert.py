@@ -39,12 +39,14 @@ def smart_assert(condition: bool):
         "response": response,
         "token_info" : token_info
     }
+    #out_dir = "examples/final_test_cases/test_suite/smart_assert_reports"
+    #os.makedirs(file_path, exist_ok=True)
+    source_dir = os.path.dirname(active_shell_ghost.source_file_path)
 
-    out_dir = "examples/gins_scripts/smart_assert/smart_assert_reports"
-    os.makedirs(out_dir, exist_ok=True)
     fname = f"{file_name}_complete_report_{datetime.utcnow():%Y%m%d_%H%M%S%f}.json"
-    path = os.path.join(out_dir, fname)
-    with open(path, "w") as fp:
+    full_path = os.path.join(source_dir, fname)
+
+    with open(full_path, "w") as fp:
         json.dump(report, fp, indent=2)
     
     print(f"[SmartAssert] failed\n\n{response}")

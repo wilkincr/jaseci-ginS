@@ -159,16 +159,13 @@ class ShellGhost:
             "with_vars": list(source_code_lines),          # With variable values
             "complete": list(source_code_lines)            # With all annotations
         }
-        
-        bb_runtime_map = {}   # bb_id -> (exec_count, total_time)
+        base_output_path = self.source_file_path
         instr_line_map = defaultdict(list)  # line_number -> [instruction strings]
         
         for module, cfg in self.cfgs.items():
-            # Map basic blocks to their runtime metrics
+            # Map instructions to their source lines
             for block_id, block in cfg.block_map.idx_to_block.items():
-                bb_runtime_map[block_id] = (block.exec_count, block.total_time)
-                
-                # Map instructions to their source lines
+                # For each instruction in the block, map it to its source line
                 for instr in block.instructions:
                     # If instruction has a line number, map it to that line
                     if instr.lineno is not None:
@@ -201,36 +198,9 @@ class ShellGhost:
             for version_name in versions:
                 current_bb = -1
                 inserted_line_count = 0  # Track how many lines we've inserted for correct positioning
-                
-                # First, handle any special blocks with no line numbers
-                special_blocks = [key for key in instr_line_map.keys() if isinstance(key, str) and key.startswith("block_")]
-                if special_blocks and version_name in ["complete"]:
-                    # Add a section at the top for instructions without line mappings
-                    versions[version_name].insert(0, "# ==== INSTRUCTIONS WITHOUT LINE MAPPINGS ====")
-                    inserted_line_count += 1
-                    
-                    for block_key in special_blocks:
-                        block_id = int(block_key.split('_')[1])
-                        execution_freq, execution_time = bb_runtime_map[block_id]
-                        
-                        block_header = f"# BB: {block_id} Execution frequency: {execution_freq} Total execution time: {execution_time:.3f} ms"
-                        versions[version_name].insert(inserted_line_count, block_header)
-                        inserted_line_count += 1
-                        
-                        instr_line = f"#   Instructions: [{', '.join(instr_line_map[block_key])}]"
-                        versions[version_name].insert(inserted_line_count, instr_line)
-                        inserted_line_count += 1
-                        
-                        # Add empty line for readability
-                        versions[version_name].insert(inserted_line_count, "")
-                        inserted_line_count += 1
-                    
-                    # Add separator after special blocks section
-                    versions[version_name].insert(inserted_line_count, "# " + "=" * 50)
-                    versions[version_name].insert(inserted_line_count + 1, "")
-                    inserted_line_count += 2
             
                 # Now process normal source lines
+                var_printed_blocks = set()
                 for line_number in range(1, len(source_code_lines) + 1):
                     adjusted_line_idx = line_number + inserted_line_count - 1
                     
@@ -239,8 +209,13 @@ class ShellGhost:
                         block_id = cfg.block_map.line_to_blocks[line_number]
                         if block_id != current_bb:
                             current_bb = block_id
-                            execution_freq, execution_time = bb_runtime_map[block_id]
-                            versions[version_name][adjusted_line_idx] += f" # BB: {block_id} Execution frequency: {execution_freq} Total execution time: {execution_time:.3f} ms"
+                            # Show all possible basic block transitions without counts
+                            transitions = []
+                            for next_bb in cfg.edges.get(block_id, []):
+                                transitions.append(f"BB{block_id}->BB{next_bb}")
+                            
+                            transitions_str = ", ".join(transitions) if transitions else "No transitions"
+                            versions[version_name][adjusted_line_idx] += f" # BB: {block_id} Transitions: {transitions_str}"
                         else:
                             versions[version_name][adjusted_line_idx] += f" # BB: {block_id}"
                     
@@ -257,47 +232,46 @@ class ShellGhost:
                     if line_number in cfg.block_map.line_to_blocks and version_name in ["with_vars", "complete"]:
                         block_id = cfg.block_map.line_to_blocks[line_number]
                         # Check if we have variable information for this module and block
-                        if module in variable_tracker.variables and block_id in variable_tracker.variables[module]:
-                            var_dict = variable_tracker.variables[module][block_id]
+                        if block_id not in var_printed_blocks:
+                            var_dict = variable_tracker.variables.get(module, {}).get(block_id, {})
                             if var_dict:
-                                # Calculate appropriate line index based on whether instructions were inserted
+                                # compute where to insert, indent, etc.
                                 var_line_idx = adjusted_line_idx + 1
                                 if version_name == "complete" and line_number in instr_line_map:
                                     var_line_idx += 1
-                                    
-                                # Calculate indent based on the appropriate previous line
-                                indent = len(versions[version_name][var_line_idx - 1]) - len(versions[version_name][var_line_idx - 1].lstrip())
-                                
-                                # Build the variable values string
-                                var_values_parts = []
+
+                                indent = len(versions[version_name][var_line_idx - 1]) \
+                                        - len(versions[version_name][var_line_idx - 1].lstrip())
+
+                                parts = []
                                 for var_name, val_counts in var_dict.items():
                                     top_vals = sorted(val_counts.items(), key=lambda x: -x[1])[:variable_tracker.top_k]
                                     for val, freq in top_vals:
-                                        var_values_parts.append(f"{var_name} = {val} (seen {freq}×)")
-                                
-                                # Create the single line with all variable information
-                                if var_values_parts:
-                                    var_line = " " * indent + "#   Variable values in this block:   " + "  ".join(var_values_parts)
-                                    versions[version_name].insert(var_line_idx, var_line)
-                                    inserted_line_count += 1
-            
-            # Save all versions to appropriate files
-            base_output_path = self.source_file_path
+                                        parts.append(f"{var_name} = {val} (seen {freq}×)")
+
+                                var_line = " " * indent \
+                                        + "#   Variable values in this block:   " \
+                                        + "  ".join(parts)
+                                versions[version_name].insert(var_line_idx, var_line)
+                                inserted_line_count += 1
+
+                                # mark done so we don't print again
+                                var_printed_blocks.add(block_id)
+                                # Save all versions to appropriate files
             
             for version_name, annotated_lines in versions.items():
                 annotated_code = "\n".join(annotated_lines)
-                output_path = f"{base_output_path}.{version_name}.jac"
+                # output_path = f"{base_output_path}.{version_name}.jac"
                 
                 # with open(output_path, "w") as f:
                 #     f.write(annotated_code)
                 
-                #print(f"\n {version_name} version written to: {output_path}")
+                # print(f"\n {version_name} version written to: {output_path}")
                 
                 # Generate analysis for each version
-                #self.prompt_annotated_code(annotated_code, variable_tracker, version_name)
+                # self.prompt_annotated_code(annotated_code, variable_tracker, version_name)
             
-            return versions  # Return the complete version for backward compatibility
-    
+            return versions 
     
     def write_error_response_to_file(self, error_response, output_filename=None):
         
