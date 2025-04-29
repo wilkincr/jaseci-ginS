@@ -142,11 +142,7 @@ class CFGTracker:
                     self.executed_insts[module] = []
                 line_no = CFGTracker.get_line_from_frame(frame)
                 self.executed_insts[module].append((frame.f_lasti, line_no, time.time()))
-
-            # 2) Track variables
-            # 2) Track variables
-            # 2) Track variables
-            # 2) Track variables
+                
             # 2) Track variables
             if "__annotations__" in frame.f_locals:
                 with self.curr_variables_lock:

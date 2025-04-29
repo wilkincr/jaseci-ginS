@@ -1,7 +1,7 @@
-import math; # BB: 0 Execution frequency: 1 Total execution time: 0.001 ms
+import math; # BB: 0 Execution frequency: 1 Total execution time: 0.006 ms
 
 with entry {
-    testcases_median_buggy: list[tuple[tuple[list[int], list[int]], float]] = [ # BB: 3 Execution frequency: 1 Total execution time: 0.005 ms
+    testcases_median_buggy: list[tuple[tuple[list[int], list[int]], float]] = [ # BB: 3 Execution frequency: 1 Total execution time: 0.000 ms
         (([1, 3], [2]), 2.0), # BB: 3
         (([1, 2], [3, 4]), 2.5), # BB: 3
         (([0, 0], [0, 0]), 0.0), # BB: 3
@@ -12,7 +12,7 @@ with entry {
     ];
     
     for ((nums1, nums2), expected) in testcases_median_buggy { # BB: 3
-        nums1_copy:<>list[int] = <>list(nums1); # BB: 5 Execution frequency: 1 Total execution time: 0.000 ms
+        nums1_copy:<>list[int] = <>list(nums1); # BB: 5 Execution frequency: 0 Total execution time: 0.000 ms
         nums2_copy:<>list[int] = <>list(nums2); # BB: 5
         
         # Algorithm directly inline

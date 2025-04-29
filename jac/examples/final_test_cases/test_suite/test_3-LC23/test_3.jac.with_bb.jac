@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-with entry { # BB: 0 Execution frequency: 0 Total execution time: 0.000 ms
-=======
 with entry { # BB: 0 Execution frequency: 1 Total execution time: 0.000 ms
->>>>>>> 22ad2987d3e6d4fc065d55455822010d54520563
     test_lists: list[list[list[int]]] = [ # BB: 0
         [[1,4,5],[1,3,4],[2,6]], # BB: 0
         [], # BB: 0

@@ -26,13 +26,13 @@ with entry {
         }
         else {
             n: int = len(nums);
-            #   Variable values in this block:   test_nums = [[2, 7, 9, 3, 1], [1, 2, 3, 1], [2, 1, 1, 2], [5], [], [2, 1, 1, 2, 1], [10, 1, 1, 10]] (seen 6×)  test_solutions = [12, 4, 4, 5, 0, 5, 20] (seen 6×)  nums = [2, 7, 9, 3, 1] (seen 6×)  solution = 12 (seen 6×)  answer = 0 (seen 6×)  n = 5 (seen 5×)  dp = [0, 0, 0, 0, 0] (seen 1×)  dp = [2, 0, 0, 0, 0] (seen 1×)  dp = [2, 7, 0, 0, 0] (seen 1×)  dp = [2, 7, 16, 0, 0] (seen 1×)
+            #   Variable values in this block:   test_nums = [[2, 7, 9, 3, 1], [1, 2, 3, 1], [2, 1, 1, 2], [5], [], [2, 1, 1, 2, 1], [10, 1, 1, 10]] (seen 7×)  test_solutions = [12, 4, 4, 5, 0, 5, 20] (seen 7×)  nums = [2, 7, 9, 3, 1] (seen 7×)  solution = 12 (seen 7×)  answer = 0 (seen 7×)  n = 5 (seen 6×)  dp = [0, 0, 0, 0, 0] (seen 1×)  dp = [2, 0, 0, 0, 0] (seen 1×)  dp = [2, 7, 0, 0, 0] (seen 1×)  dp = [2, 7, 16, 0, 0] (seen 1×)  dp = [2, 7, 16, 19, 0] (seen 1×)
             dp: list[int] = [0]*n;
             dp[0]:int = nums[0];
             dp[1]:int = max(nums[0], nums[1]);
             for j in range(2, n) {
                 dp[j]:int = max(dp[j-1] + nums[j], dp[j-2] + nums[j]);
-                #   Variable values in this block:   test_nums = [[2, 7, 9, 3, 1], [1, 2, 3, 1], [2, 1, 1, 2], [5], [], [2, 1, 1, 2, 1], [10, 1, 1, 10]] (seen 2×)  test_solutions = [12, 4, 4, 5, 0, 5, 20] (seen 2×)  nums = [2, 7, 9, 3, 1] (seen 2×)  solution = 12 (seen 2×)  answer = 0 (seen 2×)  n = 5 (seen 2×)  dp = [2, 7, 0, 0, 0] (seen 1×)  dp = [2, 7, 16, 0, 0] (seen 1×)
+                #   Variable values in this block:   test_nums = [[2, 7, 9, 3, 1], [1, 2, 3, 1], [2, 1, 1, 2], [5], [], [2, 1, 1, 2, 1], [10, 1, 1, 10]] (seen 3×)  test_solutions = [12, 4, 4, 5, 0, 5, 20] (seen 3×)  nums = [2, 7, 9, 3, 1] (seen 3×)  solution = 12 (seen 3×)  answer = 0 (seen 3×)  n = 5 (seen 3×)  dp = [2, 7, 0, 0, 0] (seen 1×)  dp = [2, 7, 16, 0, 0] (seen 1×)  dp = [2, 7, 16, 19, 0] (seen 1×)
             }
             answer:int = dp[-1];
         }

@@ -1,8 +1,8 @@
-import math; # BB: 0 Execution frequency: 1 Total execution time: 0.001 ms
+import math; # BB: 0 Execution frequency: 1 Total execution time: 0.006 ms
 #   Instructions: [SETUP_ANNOTATIONS(None)]
 
 with entry {
-    testcases_median_buggy: list[tuple[tuple[list[int], list[int]], float]] = [ # BB: 3 Execution frequency: 1 Total execution time: 0.005 ms
+    testcases_median_buggy: list[tuple[tuple[list[int], list[int]], float]] = [ # BB: 3 Execution frequency: 1 Total execution time: 0.000 ms
     #   Instructions: [BUILD_LIST(7)]
     #   Variable values in this block:   testcases_median_buggy = [(([1, 3], [2]), 2.0), (([1, 2], [3, 4]), 2.5), (([0, 0], [0, 0]), 0.0), (([2], []), 2.0), (([1], [2, 3, 4]), 2.5), (([1, 4], [2, 3]), 2.5), (([5, 6], [1, 2, 3, 4]), 3.5)] (seen 1×)
         (([1, 3], [2]), 2.0), # BB: 3
@@ -23,7 +23,7 @@ with entry {
     
     for ((nums1, nums2), expected) in testcases_median_buggy { # BB: 3
     #   Instructions: [LOAD_NAME(testcases_median_buggy), END_FOR(None)]
-        nums1_copy:<>list[int] = <>list(nums1); # BB: 5 Execution frequency: 1 Total execution time: 0.000 ms
+        nums1_copy:<>list[int] = <>list(nums1); # BB: 5 Execution frequency: 0 Total execution time: 0.000 ms
         #   Instructions: [FOR_ITER(954) [no line], UNPACK_SEQUENCE(2) [no line], UNPACK_SEQUENCE(2) [no line], STORE_NAME(nums1) [no line], STORE_NAME(nums2) [no line], STORE_NAME(expected) [no line], PUSH_NULL(None), LOAD_NAME(list) [no line], LOAD_NAME(nums1) [no line], CALL(1) [no line], STORE_NAME(nums1_copy) [no line], LOAD_CONST(list[int]) [no line], LOAD_NAME(__annotations__) [no line], LOAD_CONST(nums1_copy) [no line], STORE_SUBSCR(None) [no line], LOAD_NAME(list) [no line], LOAD_NAME(nums2) [no line], CALL(1) [no line], STORE_NAME(nums2_copy) [no line], LOAD_CONST(list[int]) [no line], LOAD_NAME(__annotations__) [no line], LOAD_CONST(nums2_copy) [no line], STORE_SUBSCR(None) [no line], LOAD_NAME(len) [no line], LOAD_NAME(nums1_copy) [no line], CALL(1) [no line], STORE_NAME(x) [no line], LOAD_CONST(int) [no line], LOAD_NAME(__annotations__) [no line], LOAD_CONST(x) [no line], STORE_SUBSCR(None) [no line], LOAD_NAME(len) [no line], LOAD_NAME(nums2_copy) [no line], CALL(1) [no line], STORE_NAME(y) [no line], LOAD_CONST(int) [no line], LOAD_NAME(__annotations__) [no line], LOAD_CONST(y) [no line], STORE_SUBSCR(None) [no line], LOAD_NAME(y) [no line], COMPARE_OP(>) [no line], POP_JUMP_IF_FALSE(426) [no line]]
         #   Variable values in this block:   testcases_median_buggy = [(([1, 3], [2]), 2.0), (([1, 2], [3, 4]), 2.5), (([0, 0], [0, 0]), 0.0), (([2], []), 2.0), (([1], [2, 3, 4]), 2.5), (([1, 4], [2, 3]), 2.5), (([5, 6], [1, 2, 3, 4]), 3.5)] (seen 5×)  nums1_copy = [1, 3] (seen 4×)  nums2_copy = [2] (seen 3×)  x = 2 (seen 2×)  y = 1 (seen 1×)
         nums2_copy:<>list[int] = <>list(nums2); # BB: 5
@@ -78,10 +78,8 @@ with entry {
             #   Variable values in this block:   testcases_median_buggy = [(([1, 3], [2]), 2.0), (([1, 2], [3, 4]), 2.5), (([0, 0], [0, 0]), 0.0), (([2], []), 2.0), (([1], [2, 3, 4]), 2.5), (([1, 4], [2, 3]), 2.5), (([5, 6], [1, 2, 3, 4]), 3.5)] (seen 1×)  nums1_copy = [2] (seen 1×)  nums2_copy = [2] (seen 1×)  x = 1 (seen 1×)  y = 1 (seen 1×)  low = 0 (seen 1×)  high = 1 (seen 1×)  got = -1.0 (seen 1×)  partitionX = 0 (seen 1×)  partitionY = 1 (seen 1×)  maxLeftX = -inf (seen 1×)  minRightX = 2 (seen 1×)  maxLeftY = 2 (seen 1×)  minRightY = inf (seen 1×)
                 if ((x + y) % 2) == 0 { # BB: 22 Execution frequency: 0 Total execution time: 0.000 ms
                 #   Instructions: [LOAD_NAME(x), LOAD_NAME(y) [no line], BINARY_OP(0) [no line], LOAD_CONST(2) [no line], BINARY_OP(6) [no line], LOAD_CONST(0) [no line], COMPARE_OP(==) [no line], POP_JUMP_IF_FALSE(822) [no line]]
-                #   Variable values in this block:   testcases_median_buggy = [(([1, 3], [2]), 2.0), (([1, 2], [3, 4]), 2.5), (([0, 0], [0, 0]), 0.0), (([2], []), 2.0), (([1], [2, 3, 4]), 2.5), (([1, 4], [2, 3]), 2.5), (([5, 6], [1, 2, 3, 4]), 3.5)] (seen 1×)  nums1_copy = [2] (seen 1×)  nums2_copy = [2] (seen 1×)  x = 1 (seen 1×)  y = 1 (seen 1×)  low = 0 (seen 1×)  high = 1 (seen 1×)  got = -1.0 (seen 1×)  partitionX = 0 (seen 1×)  partitionY = 1 (seen 1×)  maxLeftX = -inf (seen 1×)  minRightX = 2 (seen 1×)  maxLeftY = 2 (seen 1×)  minRightY = inf (seen 1×)
                     got:float = ((max(maxLeftX, maxLeftY) + minRightX) / 2.0); # BB: 23 Execution frequency: 0 Total execution time: 0.000 ms
                     #   Instructions: [PUSH_NULL(None), LOAD_NAME(max) [no line], LOAD_NAME(maxLeftX) [no line], LOAD_NAME(maxLeftY) [no line], CALL(2) [no line], LOAD_NAME(minRightX) [no line], BINARY_OP(0) [no line], LOAD_CONST(2.0) [no line], BINARY_OP(11) [no line], STORE_NAME(got) [no line], LOAD_CONST(float) [no line], LOAD_NAME(__annotations__) [no line], LOAD_CONST(got) [no line], STORE_SUBSCR(None) [no line]]
-                    #   Variable values in this block:   testcases_median_buggy = [(([1, 3], [2]), 2.0), (([1, 2], [3, 4]), 2.5), (([0, 0], [0, 0]), 0.0), (([2], []), 2.0), (([1], [2, 3, 4]), 2.5), (([1, 4], [2, 3]), 2.5), (([5, 6], [1, 2, 3, 4]), 3.5)] (seen 1×)  nums1_copy = [2] (seen 1×)  nums2_copy = [2] (seen 1×)  x = 1 (seen 1×)  y = 1 (seen 1×)  low = 0 (seen 1×)  high = 1 (seen 1×)  got = -1.0 (seen 1×)  partitionX = 0 (seen 1×)  partitionY = 1 (seen 1×)  maxLeftX = -inf (seen 1×)  minRightX = 2 (seen 1×)  maxLeftY = 2 (seen 1×)  minRightY = inf (seen 1×)
                     break; # BB: 23
                     #   Instructions: [JUMP_FORWARD(928)]
                 } else {

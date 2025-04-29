@@ -1,4 +1,4 @@
-with entry { # BB: 0 Execution frequency: 1 Total execution time: 0.004 ms
+with entry { # BB: 0 Execution frequency: 1 Total execution time: 0.006 ms
     test_targets: list[int] = [7, 15, 4, 8, 11, 3, 100]; # BB: 0
     test_nums: list[list[int]] = [ # BB: 0
         [2,3,1,2,4,3], # BB: 0
