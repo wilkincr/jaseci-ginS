@@ -212,7 +212,9 @@ The fifth prompt type included all of the three previously discussed types of an
 \subsection{Smart Assertions}
 Smart Assertions, elsewhere referred to as Intelligent Failure Analysis, are an updated form of assert statements.
 While a normal assertion statement will print out a previously formed error statement, smart assertions involve taking the runtime state at the time of the assertion failure, submitting it to an LLM, and requesting an analysis for the cause of the failure.
-FURTHER DISCUSS DESIGN AND IMPLEMENTATION HERE
+Smart assertions were implemented as function, \texttt{smart\_assert(condition)}, and when imported into a file, could be used as a replacement to standard assertions. When the condition within the smart assert fails, the function interacts with the active GINS instance and calls a final cfg update.
+Smart assert then uses the program's source code with its up-to-date runtime annotations to prompt an LLM for analysis on why failure occured.
+The LLMs resposne is then given to the user through the console before an 'AssertionError' is raised, terminating the program like a standard assert would.
 
 \section{Evaluation}
 \subsection{Prompt Formatting Performance}
@@ -265,7 +267,34 @@ Thus, the false positive rate can be understood as the rate of not only incorrec
 This is information that the user of GinS would have to know to filter out, and this false positive rate is very significant for someone who would consider using this system.
 
 \subsection{Smart Assertions Performance}
-TO BE WRITTEN
+Smart asserts were also tested on the 7 benchmarks that were used to test GINS, with benchmark containing test cases that would discover a bug, resulting in a smart assert to fail.
+The quality of the LLM's analysis was manually tested in three different categories:
+
+\begin{itemize}
+    \item \textbf{Diagnosis Accuracy} If the LLM could correctly identify the specific root cause of the failure.
+    \item \textbf{Fix Correctness} If the fix provided by the LLM was correct.
+    \item \textbf{Explanation Clarity} If the textual explanations provided by the LLM were clear, concise, and easy to follow, even if the analysis itself was incorrect.
+\end{itemize}
+
+Each benchmark was rated on a scale between 0 and 2:
+
+\begin{itemize}
+    \item[0:] Incorrect / Unclear 
+    \item[1:] Partially Correct / Acceptable
+    \item[2:] Correct / Clear
+\end{itemize}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\linewidth]{images/smartAssert.png}
+    \caption{Smart assert response analysis on 7 benchmark tests}
+    \label{fig:smartAssert}
+\end{figure}
+
+Smart asserts were able to correctly identify the root cause of errors in 5 out of the 7 benchmarks, and partially identify the error type in another. The primary exception was a heavy misdiagnosis in benchmark 4, where the analysis suggested that the test cases used were incorrect, instead of pinpointing the bug that existed in the code's logic.
+When these root causes were correctly or partially identified by smart assert, the corresponding fix provided in the response was also found to be correct and addressed the underlying issue.
+In terms of clarity, despite the inaccurate conclusion in one benchmark, the explanations provided by the LLM were consistently rated as very clear and easy to follow.
+We also observed for benchmarks 5, 6 and 7, the analysis benefitied from the runtime variable tracking information included in the prompt. It explained step by step what variable values existed in iterations of the code, noting what bugs caused discrepencies between the program output and the expected output.
 
 \subsection{GinS Overhead}
 The overhead of GinS was also analyzed.
