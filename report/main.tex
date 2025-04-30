@@ -215,23 +215,116 @@ While a normal assertion statement will print out a previously formed error stat
 FURTHER DISCUSS DESIGN AND IMPLEMENTATION HERE
 
 \section{Evaluation}
-
 \subsection{Prompt Formatting Performance}
 
+Seven benchmark programs were used to test the performance of GinS.
+These were programs that were solutions to LeetCode problems that contained errors.
+Because of this, these programs were not long-running and were not significantly complicated.
+
+For each benchmark, each type of code annotation was created and submitted with a prompt requesting recommendations for code improvement to the Gemini-1.5-pro model.
+This model supports structured output.
+Thus, a response structure was provided for the model to fill in.
+This structure was an array of improvements, where each improvement contained a "start\_line", "end\_line", "type\_of\_improvement", and "improvement\_desc".
+start\_line and end\_line corresponded to the start and end of where the code improvement would take place.
+type\_of\_improvement was initially an enumerated value with limited types of improvements being able to be suggested by the LLM.
+However, this appeared to greatly limit the responses from the LLM.
+Thus, this became an open ended value for the LLM to fill in as it saw fit for the given improvement.
+improvement\_desc was a field for the LLM to describe the improvement itself.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\linewidth]{images/PostFiltering.png}
+    \caption{Number of improvement recommendations across each annotation type.}
+    \label{fig:filtered}
+\end{figure}
+
+The responses from the LLM for each benchmark on each type of code annotation were recorded.
+These responses were then filtered.
+Responses that did not actually provide useful information or where the improvement\_desc did not correlate with the type\_of\_improvement were filtered out.
+Figure~\ref{fig:filtered} shows the results after this filtering occurred.
+There were 7 improvement types provided by the model, although some were highly related such as `safety' and `safety\_improvement'.
+It is worth noting that, for all common improvement types, the annotated source code prompts received more improvement recommendations than the unannotated prompt.
+This is clearer especially if the `safety' and `safety\_improvement' categories are considered together.
+Of the annotated prompts, the weakest performing was the with\_vars annotation.
+It does not appear particularly useful to the LLM to receive just information on common variable values at points in the code.
+The annotated prompt type that yielded the most feedback was the complete annotation.
+With all forms of information, the LLM was not overwhelmed, as was initially feared, but performed optimally.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\linewidth]{images/FalsePositiveRate.png}
+    \caption{Rate of inaccurate or unhelpful recommendations by the LLM categorized by annotation type.}
+    \label{fig:falsePositive}
+\end{figure}
+
+The false positive rate, or how often the individual improvement recommendations were not accurate or not useful, was analyzed for each annotation type, and these results can be seen in Figure~\ref{fig:falsePositive}.
+All annotation types had significant false positive rates of at least 4\% and often over 10\%.
+The bytecode instruction code annotation had a very significant false positive rate.
+This was partially due to it sometimes providing feedback that there was "no issue" in a particular portion of code, which is not relevant if the prompt is seeking improvements.
+Thus, the false positive rate can be understood as the rate of not only incorrect information but also useless information.
+This is information that the user of GinS would have to know to filter out, and this false positive rate is very significant for someone who would consider using this system.
+
 \subsection{Smart Assertions Performance}
+TO BE WRITTEN
 
 \subsection{GinS Overhead}
+The overhead of GinS was also analyzed.
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\linewidth]{images/Time.png}
+    \caption{GinS runtime normalized to runtime without GinS across benchmarks.}
+    \label{fig:time}
+\end{figure}
+
+One major consideration in the usefulness of GinS is how significantly GinS affects runtime.
+The GinS runtime for each benchmark is compared to the runtime without GinS in Figure~\ref{fig:time}.
+It is clear from this figure that GinS increases runtime by a number of orders of magnitude for most benchmarks.
+It is worth noting that because testing was limited to relatively short running programs, the accuracy of these overhead numbers is unknown for longer running programs.
+These programs ran on the scale of hundreds of nanoseconds, and the prompting of the LLM was usually on the scale of half a second or seconds.
+Thus, this overhead explosion is likely greatly reduced for programs that run for times on the scale of an LLM prompting.
+However, it is clear that GinS is not an efficient tool for short running programs such as those used as benchmarks.
+The use of longer running programs is discussed in the conclusion.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{images/PromptCost.png}
+    \caption{Prompt token count for each annotation type normalized to source code prompt length across benchmarks.}
+    \label{fig:prompt}
+\end{figure}
+
+Another form of overhead for GinS is the size of prompts sent to the LLM, and the size of the LLM's responses.
+Figure~\ref{fig:prompt} shows the prompt size as token count across each benchmark.
+These token counts are normalized to the prompt that contained no code annotations as this was a baseline for the prompt size.
+The basic block and variable value annotations had rather negligible effects on prompt size, while the instruction annotations had a major impact.
+These often reached at least a 50\% increase in prompt length.
+Since the complete annotation is the combination of all other annotations, it achieved the highest prompt length, but it was usually at a similar scale to the instruction annotations.
+Prompt length is a concern due to LLM's having a limited context window.
+For longer running applications, the source code itself may be longer than the context window, and so the annotated code would be even more likely to exceed this limit.
+However, as models are continually refined and released, the context window will also likely increase.
+This in turn may reduce the relevancy of this overhead metric.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{images/ResponseCost.png}
+    \caption{Response token count across benchmarks for each annotation type.}
+    \label{fig:response}
+\end{figure}
+
+The final overhead metric that was tested was the size of the response.
+The comparison in response length can be seen in Figure~\ref{fig:response}, although these token counts are not normalized since there is no default response length.
+Response lengths are fairly similar for each annotation type across benchmarks with a few exceptions.
+The unannotated prompt received very short replies for a few benchmarks, namely 3, 6, and 7.
+This short response represents an empty response for these benchmarks.
+The LLM did not provide relevant feedback for these benchmarks as it did not appear to have information worth sharing for these benchmarks.
+Each response seemed to be in the hundreds of tokens, and very rarely approached or exceeded 1000 tokens.
+It is worth noting that this form of overhead is directly correlated with the usefulness of GinS.
+A larger LLM response that is not full of irrelevant or incorrect information is not necessarily a worse response.
+Reducing response size too significantly can result in greatly reducing the amount of information able to be conveyed by the LLM.
+Thus, while this is technically a form of overhead, it is not necessarily a design goal to reduce this overhead significantly, and it may be a goal to increase it as long as that corresponds to more productive feedback from the LLM.
+
 
 \section{Conclusion and Future Work}
-
-%%
-%% The acknowledgments section is defined using the "acks" environment
-%% (and NOT an unnumbered section). This ensures the proper
-%% identification of the section in the article metadata, and the
-%% consistent spelling of the heading.
-\begin{acks}
-Acknowledgements go here. Delete enclosing begin/end markers if there are no acknowledgements.
-\end{acks}
+Discuss Testing on bigger programs and why we could not
 
 %%
 %% The next two lines define the bibliography style to be used, and
