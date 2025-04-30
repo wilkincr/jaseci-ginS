@@ -33,7 +33,7 @@
 %% the \doucmentclass[...]{acmart} in this template to 
 %%\documentclass[manuscript,review,anonymous]{acmart}
 %% This version is used for drafting and final submission
-\documentclass[sigconf]{acmart}
+\documentclass[sigconf,nonacm]{acmart}
 
 
 %% 
@@ -161,7 +161,8 @@ Through evaluation across [insert a short preview of your evaluation here - e.g.
     \label{fig:layout}
 \end{figure}
 
-This project is implemented upon a previous CSE 583 semeseter project entitled Ghost in the Shell: A Framework to Prompt LLMs at Runtime with Dynamic Information.
+This project is implemented upon a previous CSE 583 semeseter project entitled: Ghost in the Shell: A Framework to Prompt LLMs at Runtime with Dynamic Information. \cite{dantanarayana2024gins}
+This application was inspired by a technical proposal titled: Ghost in the Shell: Autonomous Compiler Intelligence at Runtime. \cite{mars2025gins}
 In this project, the group developed a Ghost in the Shell (GinS) thread in the Jac programming language.
 The general design of this project can be seen in Figure~\ref{fig:layout}.
 Before the target program began (i.e. during compile time), GinS would construct a CFG for the program.
@@ -183,10 +184,11 @@ The values seen for the variables in that basic block were recorded and this inf
 The original GinS implementation only used one type of tracing granularity.
 This involved a callback function that was called each time an instruction was executed in the Python runtime.
 This enabled very fine granularity, but resulted in significant overhead.
-An additional level of tracing granularity was tried in this iteration of the project.
-This involved using a timer as a signal to call a profiling function. This lead to lower granularity but also significantly lower overhead.
-These tracing granularities were relevant to which profiling metrics were able to be recorded.
-
+An additional level of tracing granularity was tried in this iteration of the project, where instead of using a callback function at the instruction level,
+we implemented a sampling approach. Sampling involved using a timer to call a profiling function at regular intervals, this lead to a lower granulary of profiling
+but significantly reduced overhead. While some metrics such as basic block execution relative frequency were now approximations, some metrics were not able
+to be collected using sampling, such as edge taken frequencies in the CFG. This is because without inspecting the actual branch instructions, it is impossible to tell
+which branches are taken from only samples.
 \subsection{Updated Prompt Formatting}
 
 \begin{figure}
@@ -297,20 +299,19 @@ In terms of clarity, despite the inaccurate conclusion in one benchmark, the exp
 We also observed for benchmarks 5, 6 and 7, the analysis benefitied from the runtime variable tracking information included in the prompt. It explained step by step what variable values existed in iterations of the code, noting what bugs caused discrepencies between the program output and the expected output.
 
 \subsection{GinS Overhead}
-The overhead of GinS was also analyzed.
 \begin{figure}
     \centering
     \includegraphics[width=0.8\linewidth]{images/Time.png}
     \caption{GinS runtime normalized to runtime without GinS across benchmarks.}
     \label{fig:time}
 \end{figure}
-
+The overhead of GinS was also analyzed.
 One major consideration in the usefulness of GinS is how significantly GinS affects runtime.
 The GinS runtime for each benchmark is compared to the runtime without GinS in Figure~\ref{fig:time}.
 It is clear from this figure that GinS increases runtime by a number of orders of magnitude for most benchmarks.
 It is worth noting that because testing was limited to relatively short running programs, the accuracy of these overhead numbers is unknown for longer running programs.
-These programs ran on the scale of hundreds of nanoseconds, and the prompting of the LLM was usually on the scale of half a second or seconds.
-Thus, this overhead explosion is likely greatly reduced for programs that run for times on the scale of an LLM prompting.
+It may be the case that the bulk of the overhead is due to fixed costs e.g. initializing and terminating the profiling thread.
+Thus, this overhead explosion is likely greatly reduced for programs that run for times on a larger scale.
 However, it is clear that GinS is not an efficient tool for short running programs such as those used as benchmarks.
 The use of longer running programs is discussed in the conclusion.
 
@@ -372,7 +373,7 @@ Thus, the first step in future work for GinS would be to fix this tracking issue
 %% The next two lines define the bibliography style to be used, and
 %% the bibliography file.
 \bibliographystyle{ACM-Reference-Format}
-\bibliography{references.bib}
+\bibliography{references}
 
 %%
 \end{document}
