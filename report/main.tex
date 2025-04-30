@@ -213,8 +213,8 @@ The fifth prompt type included all of the three previously discussed types of an
 Smart Assertions, elsewhere referred to as Intelligent Failure Analysis, are an updated form of assert statements.
 While a normal assertion statement will print out a previously formed error statement, smart assertions involve taking the runtime state at the time of the assertion failure, submitting it to an LLM, and requesting an analysis for the cause of the failure.
 Smart assertions were implemented as function, \texttt{smart\_assert(condition)}, and when imported into a file, could be used as a replacement to standard assertions. When the condition within the smart assert fails, the function interacts with the active GINS instance and calls a final cfg update.
-Smart assert then uses the program's source code with its up-to-date runtime annotations to prompt an LLM for analysis on why failure occured.
-The LLMs resposne is then given to the user through the console before an 'AssertionError' is raised, terminating the program like a standard assert would.
+Smart assert then uses the program's source code with its up-to-date runtime annotations to prompt an LLM for analysis on why failure occurred.
+The LLMs response is then given to the user through the console before an 'AssertionError' is raised, terminating the program like a standard assert would.
 
 \section{Evaluation}
 \subsection{Prompt Formatting Performance}
@@ -353,7 +353,20 @@ Thus, while this is technically a form of overhead, it is not necessarily a desi
 
 
 \section{Conclusion and Future Work}
-Discuss Testing on bigger programs and why we could not
+The current GinS system leads to more useful feedback from an LLM on how to improve one's code.
+This was accomplished by developing three types of code annotations and then considering them individually and then combining them.
+These three annotations were basic block and cfg annotation, bytecode instruction annotation, and common variable values annotation.
+Structured output supported by Gemini-1.5-pro was used to receive code improvement recommendations in a useful format.
+The feedback from the LLM was mostly useful, but it did provide excess or unhelpful information at a rate of about 10\%.
+Notably, GinS, in its current form, has rather high token cost in comparison to current contex windows, and also has an extremely large time overhead.
+These issues result in GinS needing notable effort to make it more useful.
+
+Testing GinS on larger programs that run for longer times would yield valuable results.
+This could show that the time overhead is much less significant for programs that run on the time scales of or greater than that of an LLM request.
+This also could show that current context windows are not great enough to handle the annotated source code or even the regular source code of a larger program.
+We were unable to test GinS on larger programs due to the fact that GinS, in its current form, is unable to track and understand unhashable types such as lists.
+Since many unhashable types are requisite for any long Python program, this issue highly limited the benchmarks that we were able to use.
+Thus, the first step in future work for GinS would be to fix this tracking issue for GinS, and then to use that unlocked potential to test it on longer running programs.
 
 %%
 %% The next two lines define the bibliography style to be used, and
